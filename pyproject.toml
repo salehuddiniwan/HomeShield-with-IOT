@@ -1,0 +1,79 @@
+# HomeShield packaging. Tested on Windows 11 + Python 3.11 + CUDA 12.x.
+#
+# Install order matters:
+#   1. PyTorch FIRST, from a CUDA index (otherwise pip pulls the CPU build):
+#        pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+#   2. On Windows without MSVC, InsightFace from the bundled wheel:
+#        pip install Face_Detection/insightface-0.7.3-cp311-cp311-win_amd64.whl
+#   3. HomeShield itself (editable), with the ONNX Runtime build that matches
+#      the CUDA version of the PyTorch you installed (see the extras below):
+#        pip install -e .[cuda12]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "homeshield-iot"
+description = "Centralized dashboard for real-time CCTV monitoring and anomaly detection, with an ESP32 alarm buzzer"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"   # bundled InsightFace wheels cover 3.10 / 3.11
+dynamic = ["version"]
+dependencies = [
+    # Detection / CV
+    "ultralytics>=8.4.0,<8.5",         # 8.4.0 added YOLO26 (shipped pose weights); tested on 8.4.46
+    # ByteTrack matching. Provides the `lap` module both Ultralytics 8.3
+    # (which asks for "lapx") and 8.4 (which asks for "lap") import.
+    "lap>=0.5.12",
+    "opencv-python>=4.9.0,<4.11",      # 4.11+ drops NumPy 1.x
+    # Not used directly: insightface -> albumentations installs this second
+    # copy of cv2 (no GUI). Keep it on the same release as opencv-python.
+    "opencv-python-headless>=4.9.0.80,<4.11",
+    "numpy>=1.26.0,<2.0",              # InsightFace ABI requires NumPy 1.x
+    "scipy>=1.11.0,<1.14",
+    "PyYAML>=6.0",
+    "tqdm>=4.66.0",
+    "Pillow>=10.0.0",
+    "shapely>=2.0.0",
+
+    # Face recognition (+ one of the ONNX Runtime extras below)
+    "insightface==0.7.3",
+
+    # Web dashboard
+    "Flask>=3.0.0,<4",
+    "Werkzeug>=3.0.0,<4",
+    "Jinja2>=3.1.0",
+    "itsdangerous>=2.1.0",
+    "click>=8.1.0",
+    "blinker>=1.7.0",
+
+    # Alarm buzzer: the ESP32's USB serial port (CP2102 / CH340)
+    "pyserial>=3.5",
+
+    # ESP32 nodes: HomeShield's link to its Mosquitto broker
+    "paho-mqtt>=2.0,<3",
+]
+
+[project.optional-dependencies]
+# ONNX Runtime runs the face models. Its CUDA build must match PyTorch's:
+# onnxruntime-gpu 1.27+ needs CUDA 13 and 1.26 and older need CUDA 12. With a
+# mismatch face recognition silently falls back to the (much slower) CPU.
+cuda13 = ["onnxruntime-gpu>=1.27,<2"]           # PyTorch cu130 (driver >= 580)
+cuda12 = ["onnxruntime-gpu>=1.19,<1.27"]        # PyTorch cu121 - cu128
+cpu = ["onnxruntime>=1.17,<2"]                  # no NVIDIA GPU / macOS
+plot = ["matplotlib>=3.8.0,<4"]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+
+[tool.setuptools.dynamic]
+version = { attr = "homeshield.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["homeshield*"]
+
+[tool.setuptools.package-data]
+homeshield = ["static/*.svg", "static/fonts/*", "templates/*"]

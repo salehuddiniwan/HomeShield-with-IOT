@@ -1,0 +1,245 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="960" viewBox="0 0 1560 960" font-family="Segoe UI, Roboto, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Devices node wiring</title>
+<desc id="d">ESP32 DevKit top view. Five LEDs, each from a GPIO (23, 22, 21, 19, 18) through a 220 ohm resistor to the LED's long leg; all short legs join a GND rail wired to GND. A passive buzzer module: VCC to 3V3, I/O to GPIO 25, GND to GND. Powered by USB.</desc>
+<rect width="1560" height="960" fill="#ffffff"/>
+<text x="40" y="50" font-size="26" fill="#1b2230" font-weight="700" text-anchor="start" >ESP32 #2 · Devices node (node-devices)</text>
+<text x="40" y="78" font-size="15" fill="#5a6475" text-anchor="start" >Living room. Five LEDs stand for the lights of five rooms; the passive buzzer module sounds every alarm.</text>
+<rect x="470" y="120" width="300" height="612" rx="14" fill="#23324f" stroke="#15203a" stroke-width="2"/>
+<rect x="555" y="132" width="130" height="190" rx="4" fill="#1a1d24"/>
+<path d="M565 145 h20 v15 h20 v-15 h20 v15 h20 v-15 h20 v15 h10" fill="none" stroke="#c9a646" stroke-width="2"/>
+<rect x="563" y="178" width="114" height="136" rx="3" fill="#cfd5de" stroke="#9aa3b0"/>
+<text x="620" y="242" font-size="12" fill="#39424f" font-weight="700" text-anchor="middle" >ESP-WROOM-32</text>
+<text x="620" y="260" font-size="11" fill="#5a6475" text-anchor="middle" >node-devices</text>
+<rect x="597" y="551" width="46" height="46" rx="3" fill="#0e1117"/>
+<text x="620" y="578" font-size="10" fill="#d7dce4" text-anchor="middle" >CP2102</text>
+<rect x="660" y="533" width="12" height="10" rx="2" fill="#3d8bff"/>
+<rect x="552" y="680" width="26" height="26" rx="3" fill="#d9dde3"/>
+<circle cx="565" cy="693" r="7" fill="#4a5262"/>
+<text x="565" y="718" font-size="11" fill="#e8edf5" text-anchor="middle" >EN</text>
+<rect x="662" y="680" width="26" height="26" rx="3" fill="#d9dde3"/>
+<circle cx="675" cy="693" r="7" fill="#4a5262"/>
+<text x="675" y="718" font-size="11" fill="#e8edf5" font-weight="700" text-anchor="middle" >BOOT</text>
+<rect x="590" y="722" width="60" height="28" rx="3" fill="#c0c6cf" stroke="#8d95a1"/>
+<rect x="600" y="730" width="40" height="10" rx="2" fill="#6b7380"/>
+<circle cx="488" cy="160" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="165" font-size="13" fill="#e8edf5" text-anchor="start" >EN</text>
+<circle cx="752" cy="160" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="165" font-size="13" fill="#2f8fe8" font-weight="700" text-anchor="end" >D23</text>
+<circle cx="752" cy="160" r="11" fill="none" stroke="#2f8fe8" stroke-width="3"/>
+<circle cx="488" cy="196" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="201" font-size="13" fill="#e8edf5" text-anchor="start" >VP</text>
+<circle cx="752" cy="196" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="201" font-size="13" fill="#43a047" font-weight="700" text-anchor="end" >D22</text>
+<circle cx="752" cy="196" r="11" fill="none" stroke="#43a047" stroke-width="3"/>
+<circle cx="488" cy="232" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="237" font-size="13" fill="#e8edf5" text-anchor="start" >VN</text>
+<circle cx="752" cy="232" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="237" font-size="13" fill="#e8edf5" text-anchor="end" >TX0</text>
+<circle cx="488" cy="268" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="273" font-size="13" fill="#e8edf5" text-anchor="start" >D34</text>
+<circle cx="752" cy="268" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="273" font-size="13" fill="#e8edf5" text-anchor="end" >RX0</text>
+<circle cx="488" cy="304" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="309" font-size="13" fill="#e8edf5" text-anchor="start" >D35</text>
+<circle cx="752" cy="304" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="309" font-size="13" fill="#a347c2" font-weight="700" text-anchor="end" >D21</text>
+<circle cx="752" cy="304" r="11" fill="none" stroke="#a347c2" stroke-width="3"/>
+<circle cx="488" cy="340" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="345" font-size="13" fill="#e8edf5" text-anchor="start" >D32</text>
+<circle cx="752" cy="340" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="345" font-size="13" fill="#00a3b4" font-weight="700" text-anchor="end" >D19</text>
+<circle cx="752" cy="340" r="11" fill="none" stroke="#00a3b4" stroke-width="3"/>
+<circle cx="488" cy="376" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="381" font-size="13" fill="#e8edf5" text-anchor="start" >D33</text>
+<circle cx="752" cy="376" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="381" font-size="13" fill="#e4572e" font-weight="700" text-anchor="end" >D18</text>
+<circle cx="752" cy="376" r="11" fill="none" stroke="#e4572e" stroke-width="3"/>
+<circle cx="488" cy="412" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="417" font-size="13" fill="#ef8f00" font-weight="700" text-anchor="start" >D25</text>
+<circle cx="488" cy="412" r="11" fill="none" stroke="#ef8f00" stroke-width="3"/>
+<circle cx="752" cy="412" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="417" font-size="13" fill="#e8edf5" text-anchor="end" >D5</text>
+<circle cx="488" cy="448" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="453" font-size="13" fill="#e8edf5" text-anchor="start" >D26</text>
+<circle cx="752" cy="448" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="453" font-size="13" fill="#e8edf5" text-anchor="end" >TX2</text>
+<circle cx="488" cy="484" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="489" font-size="13" fill="#e8edf5" text-anchor="start" >D27</text>
+<circle cx="752" cy="484" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="489" font-size="13" fill="#e8edf5" text-anchor="end" >RX2</text>
+<circle cx="488" cy="520" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="525" font-size="13" fill="#e8edf5" text-anchor="start" >D14</text>
+<circle cx="752" cy="520" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="525" font-size="13" fill="#e8edf5" text-anchor="end" >D4</text>
+<circle cx="488" cy="556" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="561" font-size="13" fill="#e8edf5" text-anchor="start" >D12</text>
+<circle cx="752" cy="556" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="561" font-size="13" fill="#e8edf5" text-anchor="end" >D2</text>
+<circle cx="488" cy="592" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="597" font-size="13" fill="#e8edf5" text-anchor="start" >D13</text>
+<circle cx="752" cy="592" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="597" font-size="13" fill="#e8edf5" text-anchor="end" >D15</text>
+<circle cx="488" cy="628" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="633" font-size="13" fill="#ffffff" font-weight="700" text-anchor="start" >GND</text>
+<circle cx="488" cy="628" r="11" fill="none" stroke="#b7c0cc" stroke-width="3"/>
+<circle cx="752" cy="628" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="633" font-size="13" fill="#ffffff" font-weight="700" text-anchor="end" >GND</text>
+<circle cx="752" cy="628" r="11" fill="none" stroke="#b7c0cc" stroke-width="3"/>
+<circle cx="488" cy="664" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="504" y="669" font-size="13" fill="#e8edf5" text-anchor="start" >VIN</text>
+<circle cx="752" cy="664" r="7" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="736" y="669" font-size="13" fill="#d32f2f" font-weight="700" text-anchor="end" >3V3</text>
+<circle cx="752" cy="664" r="11" fill="none" stroke="#d32f2f" stroke-width="3"/>
+<path d="M752 160 L900 160 L900 150 L940 150" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M752 160 L900 160 L900 150 L940 150" fill="none" stroke="#2f8fe8" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="752" cy="160" r="4.5" fill="#2f8fe8"/><circle cx="940" cy="150" r="4.5" fill="#2f8fe8"/>
+<line x1="940" y1="150" x2="1020" y2="150" stroke="#8d95a1" stroke-width="3"/>
+<rect x="956" y="141" width="48" height="18" rx="8" fill="#e8d3a3" stroke="#b39463"/>
+<rect x="965" y="141" width="4" height="18" fill="#d32f2f"/>
+<rect x="973" y="141" width="4" height="18" fill="#d32f2f"/>
+<rect x="981" y="141" width="4" height="18" fill="#6d4c41"/>
+<rect x="989" y="141" width="4" height="18" fill="#c9a646"/>
+<text x="980" y="135" font-size="11" fill="#5a6475" text-anchor="middle" >220 Ω</text>
+<path d="M1020 150 L1050 150" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1020 150 L1050 150" fill="none" stroke="#2f8fe8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1020" cy="150" r="4.5" fill="#2f8fe8"/><circle cx="1050" cy="150" r="4.5" fill="#2f8fe8"/>
+<line x1="1050" y1="150" x2="1068" y2="150" stroke="#8d95a1" stroke-width="3"/>
+<line x1="1092" y1="150" x2="1110" y2="150" stroke="#8d95a1" stroke-width="3"/>
+<circle cx="1080" cy="150" r="13" fill="#ffd54f" stroke="#7a6a2a" stroke-width="1.5"/>
+<circle cx="1076" cy="146" r="4" fill="#ffffff" opacity=".6"/>
+<line x1="1089" y1="140" x2="1089" y2="160" stroke="#7a6a2a" stroke-width="2"/>
+<text x="1058" y="134" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >+</text>
+<text x="1102" y="134" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >−</text>
+<text x="1080" y="182" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >L1 Porch</text>
+<path d="M1110 150 L1190 150" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1110 150 L1190 150" fill="none" stroke="#222222" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1110" cy="150" r="4.5" fill="#222222"/><circle cx="1190" cy="150" r="4.5" fill="#222222"/>
+<path d="M752 196 L878 196 L878 242 L940 242" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M752 196 L878 196 L878 242 L940 242" fill="none" stroke="#43a047" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="752" cy="196" r="4.5" fill="#43a047"/><circle cx="940" cy="242" r="4.5" fill="#43a047"/>
+<line x1="940" y1="242" x2="1020" y2="242" stroke="#8d95a1" stroke-width="3"/>
+<rect x="956" y="233" width="48" height="18" rx="8" fill="#e8d3a3" stroke="#b39463"/>
+<rect x="965" y="233" width="4" height="18" fill="#d32f2f"/>
+<rect x="973" y="233" width="4" height="18" fill="#d32f2f"/>
+<rect x="981" y="233" width="4" height="18" fill="#6d4c41"/>
+<rect x="989" y="233" width="4" height="18" fill="#c9a646"/>
+<text x="980" y="227" font-size="11" fill="#5a6475" text-anchor="middle" >220 Ω</text>
+<path d="M1020 242 L1050 242" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1020 242 L1050 242" fill="none" stroke="#43a047" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1020" cy="242" r="4.5" fill="#43a047"/><circle cx="1050" cy="242" r="4.5" fill="#43a047"/>
+<line x1="1050" y1="242" x2="1068" y2="242" stroke="#8d95a1" stroke-width="3"/>
+<line x1="1092" y1="242" x2="1110" y2="242" stroke="#8d95a1" stroke-width="3"/>
+<circle cx="1080" cy="242" r="13" fill="#ffd54f" stroke="#7a6a2a" stroke-width="1.5"/>
+<circle cx="1076" cy="238" r="4" fill="#ffffff" opacity=".6"/>
+<line x1="1089" y1="232" x2="1089" y2="252" stroke="#7a6a2a" stroke-width="2"/>
+<text x="1058" y="226" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >+</text>
+<text x="1102" y="226" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >−</text>
+<text x="1080" y="274" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >L2 Living room</text>
+<path d="M1110 242 L1190 242" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1110 242 L1190 242" fill="none" stroke="#222222" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1110" cy="242" r="4.5" fill="#222222"/><circle cx="1190" cy="242" r="4.5" fill="#222222"/>
+<path d="M752 304 L856 304 L856 334 L940 334" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M752 304 L856 304 L856 334 L940 334" fill="none" stroke="#a347c2" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="752" cy="304" r="4.5" fill="#a347c2"/><circle cx="940" cy="334" r="4.5" fill="#a347c2"/>
+<line x1="940" y1="334" x2="1020" y2="334" stroke="#8d95a1" stroke-width="3"/>
+<rect x="956" y="325" width="48" height="18" rx="8" fill="#e8d3a3" stroke="#b39463"/>
+<rect x="965" y="325" width="4" height="18" fill="#d32f2f"/>
+<rect x="973" y="325" width="4" height="18" fill="#d32f2f"/>
+<rect x="981" y="325" width="4" height="18" fill="#6d4c41"/>
+<rect x="989" y="325" width="4" height="18" fill="#c9a646"/>
+<text x="980" y="319" font-size="11" fill="#5a6475" text-anchor="middle" >220 Ω</text>
+<path d="M1020 334 L1050 334" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1020 334 L1050 334" fill="none" stroke="#a347c2" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1020" cy="334" r="4.5" fill="#a347c2"/><circle cx="1050" cy="334" r="4.5" fill="#a347c2"/>
+<line x1="1050" y1="334" x2="1068" y2="334" stroke="#8d95a1" stroke-width="3"/>
+<line x1="1092" y1="334" x2="1110" y2="334" stroke="#8d95a1" stroke-width="3"/>
+<circle cx="1080" cy="334" r="13" fill="#ffd54f" stroke="#7a6a2a" stroke-width="1.5"/>
+<circle cx="1076" cy="330" r="4" fill="#ffffff" opacity=".6"/>
+<line x1="1089" y1="324" x2="1089" y2="344" stroke="#7a6a2a" stroke-width="2"/>
+<text x="1058" y="318" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >+</text>
+<text x="1102" y="318" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >−</text>
+<text x="1080" y="366" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >L3 Kitchen</text>
+<path d="M1110 334 L1190 334" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1110 334 L1190 334" fill="none" stroke="#222222" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1110" cy="334" r="4.5" fill="#222222"/><circle cx="1190" cy="334" r="4.5" fill="#222222"/>
+<path d="M752 340 L834 340 L834 426 L940 426" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M752 340 L834 340 L834 426 L940 426" fill="none" stroke="#00a3b4" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="752" cy="340" r="4.5" fill="#00a3b4"/><circle cx="940" cy="426" r="4.5" fill="#00a3b4"/>
+<line x1="940" y1="426" x2="1020" y2="426" stroke="#8d95a1" stroke-width="3"/>
+<rect x="956" y="417" width="48" height="18" rx="8" fill="#e8d3a3" stroke="#b39463"/>
+<rect x="965" y="417" width="4" height="18" fill="#d32f2f"/>
+<rect x="973" y="417" width="4" height="18" fill="#d32f2f"/>
+<rect x="981" y="417" width="4" height="18" fill="#6d4c41"/>
+<rect x="989" y="417" width="4" height="18" fill="#c9a646"/>
+<text x="980" y="411" font-size="11" fill="#5a6475" text-anchor="middle" >220 Ω</text>
+<path d="M1020 426 L1050 426" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1020 426 L1050 426" fill="none" stroke="#00a3b4" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1020" cy="426" r="4.5" fill="#00a3b4"/><circle cx="1050" cy="426" r="4.5" fill="#00a3b4"/>
+<line x1="1050" y1="426" x2="1068" y2="426" stroke="#8d95a1" stroke-width="3"/>
+<line x1="1092" y1="426" x2="1110" y2="426" stroke="#8d95a1" stroke-width="3"/>
+<circle cx="1080" cy="426" r="13" fill="#ffd54f" stroke="#7a6a2a" stroke-width="1.5"/>
+<circle cx="1076" cy="422" r="4" fill="#ffffff" opacity=".6"/>
+<line x1="1089" y1="416" x2="1089" y2="436" stroke="#7a6a2a" stroke-width="2"/>
+<text x="1058" y="410" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >+</text>
+<text x="1102" y="410" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >−</text>
+<text x="1080" y="458" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >L4 Master bedroom</text>
+<path d="M1110 426 L1190 426" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1110 426 L1190 426" fill="none" stroke="#222222" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1110" cy="426" r="4.5" fill="#222222"/><circle cx="1190" cy="426" r="4.5" fill="#222222"/>
+<path d="M752 376 L812 376 L812 518 L940 518" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M752 376 L812 376 L812 518 L940 518" fill="none" stroke="#e4572e" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="752" cy="376" r="4.5" fill="#e4572e"/><circle cx="940" cy="518" r="4.5" fill="#e4572e"/>
+<line x1="940" y1="518" x2="1020" y2="518" stroke="#8d95a1" stroke-width="3"/>
+<rect x="956" y="509" width="48" height="18" rx="8" fill="#e8d3a3" stroke="#b39463"/>
+<rect x="965" y="509" width="4" height="18" fill="#d32f2f"/>
+<rect x="973" y="509" width="4" height="18" fill="#d32f2f"/>
+<rect x="981" y="509" width="4" height="18" fill="#6d4c41"/>
+<rect x="989" y="509" width="4" height="18" fill="#c9a646"/>
+<text x="980" y="503" font-size="11" fill="#5a6475" text-anchor="middle" >220 Ω</text>
+<path d="M1020 518 L1050 518" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1020 518 L1050 518" fill="none" stroke="#e4572e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1020" cy="518" r="4.5" fill="#e4572e"/><circle cx="1050" cy="518" r="4.5" fill="#e4572e"/>
+<line x1="1050" y1="518" x2="1068" y2="518" stroke="#8d95a1" stroke-width="3"/>
+<line x1="1092" y1="518" x2="1110" y2="518" stroke="#8d95a1" stroke-width="3"/>
+<circle cx="1080" cy="518" r="13" fill="#ffd54f" stroke="#7a6a2a" stroke-width="1.5"/>
+<circle cx="1076" cy="514" r="4" fill="#ffffff" opacity=".6"/>
+<line x1="1089" y1="508" x2="1089" y2="528" stroke="#7a6a2a" stroke-width="2"/>
+<text x="1058" y="502" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >+</text>
+<text x="1102" y="502" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >−</text>
+<text x="1080" y="550" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >L5 Bedroom 2</text>
+<path d="M1110 518 L1190 518" fill="none" stroke="#ffffff" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/><path d="M1110 518 L1190 518" fill="none" stroke="#222222" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1110" cy="518" r="4.5" fill="#222222"/><circle cx="1190" cy="518" r="4.5" fill="#222222"/>
+<line x1="1190" y1="140" x2="1190" y2="528" stroke="#222222" stroke-width="6" stroke-linecap="round"/>
+<text x="1204" y="145" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" >GND rail</text>
+<text x="1204" y="163" font-size="12" fill="#5a6475" text-anchor="start" >(breadboard − rail)</text>
+<path d="M1190 518 L1190 628 L752 628" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M1190 518 L1190 628 L752 628" fill="none" stroke="#222222" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="1190" cy="518" r="4.5" fill="#222222"/><circle cx="752" cy="628" r="4.5" fill="#222222"/>
+<rect x="150" y="490" width="150" height="150" rx="8" fill="#2f6fd0" stroke="#1d2a3d" stroke-width="1.5"/>
+<circle cx="215" cy="560" r="36" fill="#1d1d1f"/><circle cx="215" cy="560" r="8" fill="#4a4a4f"/><text x="215" y="625" font-size="11" fill="#dfe7f5" font-weight="700" text-anchor="middle" >MH-FMD</text>
+<rect x="296" y="523" width="22" height="10" rx="2" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="290" y="532" font-size="11" fill="#ffffff" font-weight="700" text-anchor="end" >VCC</text>
+<rect x="296" y="560" width="22" height="10" rx="2" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="290" y="569" font-size="11" fill="#ffffff" font-weight="700" text-anchor="end" >I/O</text>
+<rect x="296" y="597" width="22" height="10" rx="2" fill="#d4a640" stroke="#8a6a1f"/>
+<text x="290" y="606" font-size="11" fill="#ffffff" font-weight="700" text-anchor="end" >GND</text>
+<text x="225.0" y="480" font-size="14" fill="#1b2230" font-weight="700" text-anchor="middle" >Passive buzzer module</text>
+<path d="M318 565 L400 565 L400 412 L488 412" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M318 565 L400 565 L400 412 L488 412" fill="none" stroke="#ef8f00" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="318" cy="565" r="4.5" fill="#ef8f00"/><circle cx="488" cy="412" r="4.5" fill="#ef8f00"/>
+<path d="M318 602 L380 602 L380 628 L488 628" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M318 602 L380 602 L380 628 L488 628" fill="none" stroke="#222222" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="318" cy="602" r="4.5" fill="#222222"/><circle cx="488" cy="628" r="4.5" fill="#222222"/>
+<path d="M318 528 L350 528 L350 905 L810 905 L810 664 L752 664" fill="none" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><path d="M318 528 L350 528 L350 905 L810 905 L810 664 L752 664" fill="none" stroke="#d32f2f" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="318" cy="528" r="4.5" fill="#d32f2f"/><circle cx="752" cy="664" r="4.5" fill="#d32f2f"/>
+<path d="M620 750 V810" fill="none" stroke="#555b66" stroke-width="7" stroke-linecap="round"/>
+<rect x="586" y="810" width="68" height="40" rx="6" fill="#e9edf2" stroke="#9aa3b0"/>
+<rect x="606" y="850" width="28" height="12" rx="2" fill="#9aa3b0"/>
+<text x="620" y="835" font-size="13" fill="#1b2230" font-weight="700" text-anchor="middle" >5 V</text>
+<text x="620" y="882" font-size="12" fill="#5a6475" text-anchor="middle" >USB power: phone charger, power bank or the computer</text>
+<text x="880" y="680" font-size="15" fill="#1b2230" font-weight="700" text-anchor="start" >Pins</text>
+<text x="880" y="706" font-size="11" fill="#5a6475" font-weight="700" text-anchor="start" letter-spacing="1">GPIO</text>
+<text x="950" y="706" font-size="11" fill="#5a6475" font-weight="700" text-anchor="start" letter-spacing="1">WIRED TO</text>
+<text x="1140" y="706" font-size="11" fill="#5a6475" font-weight="700" text-anchor="start" letter-spacing="1">MAP IT IN HOMESHIELD AS</text>
+<line x1="880" y1="714" x2="1390" y2="714" stroke="#e3e8ef"/>
+<text x="880" y="730" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >23</text>
+<text x="950" y="730" font-size="13" fill="#1b2230" text-anchor="start" >LED L1 via 220 Ω</text>
+<text x="1140" y="730" font-size="13" fill="#1b2230" text-anchor="start" >Light · Porch · untick “on with LOW”</text>
+<line x1="880" y1="736" x2="1390" y2="736" stroke="#e3e8ef"/>
+<text x="880" y="752" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >22</text>
+<text x="950" y="752" font-size="13" fill="#1b2230" text-anchor="start" >LED L2 via 220 Ω</text>
+<text x="1140" y="752" font-size="13" fill="#1b2230" text-anchor="start" >Light · Living room · untick “on with LOW”</text>
+<line x1="880" y1="758" x2="1390" y2="758" stroke="#e3e8ef"/>
+<text x="880" y="774" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >21</text>
+<text x="950" y="774" font-size="13" fill="#1b2230" text-anchor="start" >LED L3 via 220 Ω</text>
+<text x="1140" y="774" font-size="13" fill="#1b2230" text-anchor="start" >Light · Kitchen · untick “on with LOW”</text>
+<line x1="880" y1="780" x2="1390" y2="780" stroke="#e3e8ef"/>
+<text x="880" y="796" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >19</text>
+<text x="950" y="796" font-size="13" fill="#1b2230" text-anchor="start" >LED L4 via 220 Ω</text>
+<text x="1140" y="796" font-size="13" fill="#1b2230" text-anchor="start" >Light · Master bedroom · untick “on with LOW”</text>
+<line x1="880" y1="802" x2="1390" y2="802" stroke="#e3e8ef"/>
+<text x="880" y="818" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >18</text>
+<text x="950" y="818" font-size="13" fill="#1b2230" text-anchor="start" >LED L5 via 220 Ω</text>
+<text x="1140" y="818" font-size="13" fill="#1b2230" text-anchor="start" >Light · Bedroom 2 · untick “on with LOW”</text>
+<line x1="880" y1="824" x2="1390" y2="824" stroke="#e3e8ef"/>
+<text x="880" y="840" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >25</text>
+<text x="950" y="840" font-size="13" fill="#1b2230" text-anchor="start" >Buzzer module I/O</text>
+<text x="1140" y="840" font-size="13" fill="#1b2230" text-anchor="start" >Alarm buzzer · passive, on with LOW</text>
+<rect x="40" y="120" width="380" height="160" rx="10" fill="#f6f8fb" stroke="#c9d1dc"/>
+<text x="58" y="148" font-size="15" fill="#1b2230" font-weight="700" text-anchor="start" >LEDs: which leg where</text>
+<text x="58" y="172" font-size="13" fill="#5a6475" text-anchor="start" >Long leg (+, anode) to the resistor,</text>
+<text x="58" y="192" font-size="13" fill="#5a6475" text-anchor="start" >short leg (−, flat side) to the GND rail.</text>
+<text x="58" y="212" font-size="13" fill="#5a6475" text-anchor="start" >220 Ω gives about 6 mA: bright, safe.</text>
+<text x="58" y="232" font-size="13" fill="#5a6475" text-anchor="start" >Red, yellow or green LEDs work best at</text>
+<text x="58" y="252" font-size="13" fill="#5a6475" text-anchor="start" >3.3 V; white or blue ones glow dimmer</text>
+<text x="58" y="272" font-size="13" fill="#5a6475" text-anchor="start" >(use 100 Ω for those if you have it).</text>
+<rect x="40" y="300" width="380" height="100" rx="10" fill="#f6f8fb" stroke="#c9d1dc"/>
+<text x="58" y="328" font-size="15" fill="#1b2230" font-weight="700" text-anchor="start" >Buzzer module (MH-FMD)</text>
+<text x="58" y="352" font-size="13" fill="#5a6475" text-anchor="start" >VCC to 3V3, GND to GND, I/O to D25.</text>
+<text x="58" y="372" font-size="13" fill="#5a6475" text-anchor="start" >It sounds when I/O is LOW (低电平触发),</text>
+<text x="58" y="392" font-size="13" fill="#5a6475" text-anchor="start" >so keep “Switches on with LOW” ticked.</text>
+</svg>

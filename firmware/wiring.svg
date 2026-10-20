@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="910" viewBox="0 0 1200 910" font-family="Segoe UI, Roboto, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">HomeShield buzzer and SOS button wiring</title>
+  <desc id="d">ESP32 DevKit V1 seen from above. Pin D25 goes to the buzzer's plus lead and a GND pin to its minus lead. An SOS push button goes between pin D33 and the same GND. The board's USB port connects to the HomeShield computer. The blue LED on GPIO 2 shows the link, the BOOT button silences the alarm. Inset: a three-pin buzzer module wires VCC to 3V3, GND to GND and I/O to D25.</desc>
+
+  <rect width="1200" height="910" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="40" y="50" font-size="26" font-weight="700" fill="#1b2230">HomeShield buzzer and SOS button: wiring</text>
+  <text x="40" y="78" font-size="15" fill="#5a6475">ESP32 DevKit V1 (30-pin, CP2102), top view. Two wires each for the buzzer and the SOS button, and a USB cable to the computer.</text>
+
+  <!-- ===== Board ===== -->
+  <rect x="410" y="110" width="300" height="612" rx="14" fill="#23324f" stroke="#15203a" stroke-width="2"/>
+  <!-- ESP-WROOM-32 module -->
+  <rect x="495" y="122" width="130" height="190" rx="4" fill="#1a1d24"/>
+  <path d="M505 135 h20 v15 h20 v-15 h20 v15 h20 v-15 h20 v15 h10" fill="none" stroke="#c9a646" stroke-width="2"/>
+  <rect x="503" y="168" width="114" height="136" rx="3" fill="#cfd5de" stroke="#9aa3b0"/>
+  <text x="560" y="238" font-size="12" font-weight="700" fill="#39424f" text-anchor="middle">ESP-WROOM-32</text>
+  <text x="560" y="256" font-size="10" fill="#5a6475" text-anchor="middle">Wi-Fi + Bluetooth</text>
+
+  <!-- CP2102 chip, LED, buttons, USB -->
+  <rect x="537" y="541" width="46" height="46" rx="3" fill="#0e1117"/>
+  <text x="560" y="568" font-size="10" fill="#d7dce4" text-anchor="middle">CP2102</text>
+  <circle cx="606" cy="528" r="9" fill="#3d8bff" opacity="0.25"/>
+  <rect x="600" y="523" width="12" height="10" rx="2" fill="#3d8bff"/>
+  <rect x="492" y="670" width="26" height="26" rx="3" fill="#d9dde3"/>
+  <circle cx="505" cy="683" r="7" fill="#4a5262"/>
+  <text x="505" y="708" font-size="11" fill="#e8edf5" text-anchor="middle">EN</text>
+  <rect x="602" y="670" width="26" height="26" rx="3" fill="#d9dde3"/>
+  <circle cx="615" cy="683" r="7" fill="#4a5262"/>
+  <text x="615" y="708" font-size="11" font-weight="700" fill="#e8edf5" text-anchor="middle">BOOT</text>
+  <rect x="530" y="712" width="60" height="28" rx="3" fill="#c0c6cf" stroke="#8d95a1"/>
+  <rect x="540" y="720" width="40" height="10" rx="2" fill="#6b7380"/>
+
+  <!-- Left header, top to bottom -->
+  <g font-size="13" fill="#e8edf5">
+    <g fill="#d4a640" stroke="#8a6a1f">
+      <circle cx="428" cy="150" r="7"/><circle cx="428" cy="186" r="7"/><circle cx="428" cy="222" r="7"/>
+      <circle cx="428" cy="258" r="7"/><circle cx="428" cy="294" r="7"/><circle cx="428" cy="330" r="7"/>
+      <circle cx="428" cy="366" r="7"/><circle cx="428" cy="402" r="7"/><circle cx="428" cy="438" r="7"/>
+      <circle cx="428" cy="474" r="7"/><circle cx="428" cy="510" r="7"/><circle cx="428" cy="546" r="7"/>
+      <circle cx="428" cy="582" r="7"/><circle cx="428" cy="618" r="7"/><circle cx="428" cy="654" r="7"/>
+      <circle cx="692" cy="150" r="7"/><circle cx="692" cy="186" r="7"/><circle cx="692" cy="222" r="7"/>
+      <circle cx="692" cy="258" r="7"/><circle cx="692" cy="294" r="7"/><circle cx="692" cy="330" r="7"/>
+      <circle cx="692" cy="366" r="7"/><circle cx="692" cy="402" r="7"/><circle cx="692" cy="438" r="7"/>
+      <circle cx="692" cy="474" r="7"/><circle cx="692" cy="510" r="7"/><circle cx="692" cy="546" r="7"/>
+      <circle cx="692" cy="582" r="7"/><circle cx="692" cy="618" r="7"/><circle cx="692" cy="654" r="7"/>
+    </g>
+    <text x="444" y="155">EN</text><text x="444" y="191">VP</text><text x="444" y="227">VN</text>
+    <text x="444" y="263">D34</text><text x="444" y="299">D35</text><text x="444" y="335">D32</text>
+    <text x="444" y="371" font-weight="700" fill="#b39dff">D33</text>
+    <text x="444" y="407" font-weight="700" fill="#ffb347">D25</text>
+    <text x="444" y="443">D26</text><text x="444" y="479">D27</text><text x="444" y="515">D14</text>
+    <text x="444" y="551">D12</text><text x="444" y="587">D13</text>
+    <text x="444" y="623" font-weight="700">GND</text>
+    <text x="444" y="659">VIN</text>
+
+    <g text-anchor="end">
+      <text x="676" y="155">D23</text><text x="676" y="191">D22</text><text x="676" y="227">TX0</text>
+      <text x="676" y="263">RX0</text><text x="676" y="299">D21</text><text x="676" y="335">D19</text>
+      <text x="676" y="371">D18</text><text x="676" y="407">D5</text><text x="676" y="443">TX2</text>
+      <text x="676" y="479">RX2</text><text x="676" y="515">D4</text><text x="676" y="551">D2</text>
+      <text x="676" y="587">D15</text><text x="676" y="623">GND</text>
+      <text x="676" y="659" font-weight="700" fill="#ff8a80">3V3</text>
+    </g>
+  </g>
+  <!-- the pins in use -->
+  <circle cx="428" cy="402" r="11" fill="none" stroke="#f08c00" stroke-width="3"/>
+  <circle cx="428" cy="366" r="11" fill="none" stroke="#7c4dff" stroke-width="3"/>
+  <circle cx="428" cy="618" r="11" fill="none" stroke="#222" stroke-width="3"/>
+
+  <!-- ===== SOS button ===== -->
+  <text x="200" y="232" font-size="15" font-weight="700" fill="#1b2230" text-anchor="middle">SOS button</text>
+  <rect x="150" y="316" width="100" height="18" rx="3" fill="#2b2f36"/>
+  <circle cx="200" cy="290" r="38" fill="#b3261e"/>
+  <circle cx="200" cy="286" r="30" fill="#e5483f"/>
+  <text x="200" y="293" font-size="17" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="1">SOS</text>
+  <line x1="238" y1="290" x2="262" y2="290" stroke="#9aa3b0" stroke-width="4"/>
+  <line x1="162" y1="290" x2="138" y2="290" stroke="#9aa3b0" stroke-width="4"/>
+  <text x="200" y="356" font-size="13" fill="#5a6475" text-anchor="middle">Either leg to D33,</text>
+  <text x="200" y="373" font-size="13" fill="#5a6475" text-anchor="middle">the other to GND.</text>
+
+  <!-- ===== Buzzer ===== -->
+  <text x="190" y="420" font-size="15" font-weight="700" fill="#1b2230" text-anchor="middle">Active buzzer</text>
+  <circle cx="190" cy="500" r="62" fill="#1d1d1f"/>
+  <circle cx="190" cy="500" r="50" fill="none" stroke="#3a3a3e" stroke-width="2"/>
+  <circle cx="190" cy="500" r="10" fill="#4a4a4f"/>
+  <text x="222" y="474" font-size="18" font-weight="700" fill="#ffffff" text-anchor="middle">+</text>
+  <line x1="248" y1="470" x2="275" y2="470" stroke="#9aa3b0" stroke-width="4"/>
+  <line x1="248" y1="530" x2="275" y2="530" stroke="#9aa3b0" stroke-width="4"/>
+  <text x="268" y="458" font-size="15" font-weight="700" fill="#1b2230" text-anchor="middle">+</text>
+  <text x="268" y="556" font-size="15" font-weight="700" fill="#1b2230" text-anchor="middle">−</text>
+  <text x="190" y="600" font-size="13" fill="#5a6475" text-anchor="middle">The longer leg, or the side</text>
+  <text x="190" y="617" font-size="13" fill="#5a6475" text-anchor="middle">marked +, goes to D25.</text>
+
+  <!-- ===== Wires ===== -->
+  <path d="M428 402 H340 V470 H275" fill="none" stroke="#f08c00" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M428 618 H360 V530 H275" fill="none" stroke="#222" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="275" cy="470" r="5" fill="#f08c00"/>
+  <circle cx="275" cy="530" r="5" fill="#222"/>
+  <path d="M428 366 H330 V290 H262" fill="none" stroke="#7c4dff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M138 290 H95 V650 H380 V618" fill="none" stroke="#222" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="262" cy="290" r="5" fill="#7c4dff"/>
+  <circle cx="138" cy="290" r="5" fill="#222"/>
+  <circle cx="380" cy="618" r="6" fill="#222"/>
+
+  <!-- ===== USB cable + computer ===== -->
+  <path d="M560 740 V806 H300" fill="none" stroke="#555b66" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="165" y="735" width="120" height="75" rx="4" fill="#2b3446"/>
+  <rect x="172" y="742" width="106" height="61" rx="2" fill="#3c4a66"/>
+  <path d="M150 812 H300 L290 824 H160 Z" fill="#9aa3b0"/>
+  <text x="225" y="852" font-size="14" font-weight="700" fill="#1b2230" text-anchor="middle">HomeShield computer</text>
+  <text x="225" y="871" font-size="12" fill="#5a6475" text-anchor="middle">USB data cable: power + serial (COMx)</text>
+
+  <!-- ===== Callouts ===== -->
+  <g fill="none" stroke="#8d95a1" stroke-width="1.5">
+    <path d="M612 528 H735 V458 H760"/>
+    <path d="M583 564 H760"/>
+    <path d="M628 683 H760"/>
+  </g>
+  <g font-size="13" fill="#5a6475">
+    <text x="770" y="462" font-size="14" font-weight="700" fill="#1b2230">Blue LED (GPIO 2)</text>
+    <text x="770" y="481">on: connected · fast blink: sounding</text>
+    <text x="770" y="499">short flash: no word from HomeShield</text>
+    <text x="770" y="568" font-size="14" font-weight="700" fill="#1b2230">CP2102 USB chip</text>
+    <text x="770" y="587">HomeShield finds the board by this chip</text>
+    <text x="770" y="687" font-size="14" font-weight="700" fill="#1b2230">BOOT button (GPIO 0)</text>
+    <text x="770" y="706">press to silence the alarm</text>
+  </g>
+
+  <!-- ===== Inset: 3-pin module ===== -->
+  <rect x="760" y="110" width="400" height="300" rx="12" fill="#f6f8fb" stroke="#c9d1dc"/>
+  <text x="782" y="142" font-size="16" font-weight="700" fill="#1b2230">Using a 3-pin buzzer module instead</text>
+  <rect x="785" y="160" width="120" height="145" rx="6" fill="#2f6fd0"/>
+  <circle cx="845" cy="215" r="34" fill="#1d1d1f"/>
+  <circle cx="845" cy="215" r="8" fill="#4a4a4f"/>
+  <g fill="#d4a640" stroke="#8a6a1f">
+    <rect x="809" y="298" width="12" height="30" rx="2"/>
+    <rect x="839" y="298" width="12" height="30" rx="2"/>
+    <rect x="869" y="298" width="12" height="30" rx="2"/>
+  </g>
+  <g font-size="12" font-weight="700" fill="#1b2230" text-anchor="middle">
+    <text x="815" y="346">VCC</text><text x="845" y="346">GND</text><text x="875" y="346">I/O</text>
+  </g>
+  <g font-size="15" fill="#1b2230">
+    <circle cx="935" cy="196" r="6" fill="#d6322e"/><text x="950" y="201"><tspan font-weight="700">VCC</tspan>  →  3V3</text>
+    <circle cx="935" cy="230" r="6" fill="#222"/><text x="950" y="235"><tspan font-weight="700">GND</tspan>  →  GND</text>
+    <circle cx="935" cy="264" r="6" fill="#f08c00"/><text x="950" y="269"><tspan font-weight="700">I/O</tspan>  →  D25</text>
+  </g>
+  <g font-size="12" fill="#5a6475">
+    <text x="782" y="374">Sold as “low level trigger”? Set BUZZER_ON_LEVEL LOW.</text>
+    <text x="782" y="393">Only clicks? It is passive: set BUZZER_PASSIVE 1.</text>
+  </g>
+
+  <!-- ===== Legend ===== -->
+  <g font-size="13" fill="#1b2230">
+    <line x1="760" y1="772" x2="800" y2="772" stroke="#f08c00" stroke-width="5" stroke-linecap="round"/>
+    <text x="812" y="777">signal: D25 to buzzer +</text>
+    <line x1="760" y1="800" x2="800" y2="800" stroke="#222" stroke-width="5" stroke-linecap="round"/>
+    <text x="812" y="805">ground: GND to buzzer −</text>
+    <line x1="760" y1="828" x2="800" y2="828" stroke="#d6322e" stroke-width="5" stroke-linecap="round"/>
+    <text x="812" y="833">3.3 V: 3V3, for a 3-pin module only</text>
+    <line x1="760" y1="856" x2="800" y2="856" stroke="#7c4dff" stroke-width="5" stroke-linecap="round"/>
+    <text x="812" y="861">SOS: D33 to the button (shares the GND wire)</text>
+  </g>
+
+  <text x="40" y="900" font-size="12" fill="#8d95a1">Pins are named as printed on the board. On another ESP32 board, find D25, D33, GND and 3V3 by their labels; to use other pins, change BUZZER_PIN and SOS_PIN in config.h.</text>
+</svg>

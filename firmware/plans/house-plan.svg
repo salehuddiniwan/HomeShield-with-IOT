@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="1190" viewBox="0 0 1660 1190" font-family="Segoe UI, Roboto, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">HomeShield IoT test house plan</title>
+<desc id="d">Double-storey terrace house. Ground floor: kitchen at the back with the gas stove, sensors node (ESP32 #3), MQ-5 high on the wall, flame sensor facing the stove and PIR watching the back door; dining; living room with the devices node (ESP32 #2) and buzzer at the TV console and the HomeShield PC; car porch at the front. Lights L1 porch, L2 living room, L3 kitchen. First floor: bedroom 2 (L5), bathroom, landing, master bedroom (L4) with the SOS node (ESP32 #1) and its button at the bedside.</desc>
+<rect width="1660" height="1190" fill="#ffffff"/>
+<text x="40" y="52" font-size="26" fill="#1b2230" font-weight="700" text-anchor="start" >HomeShield IoT test house · double-storey terrace</text>
+<text x="40" y="80" font-size="15" fill="#5a6475" text-anchor="start" >Where the three ESP32 boards go, which LED is which room's light, and where each sensor points. All three boards join the same 2.4 GHz Wi-Fi as the HomeShield computer.</text>
+<text x="60" y="136" font-size="14" fill="#1b2230" font-weight="800" text-anchor="start" letter-spacing="2">GROUND FLOOR</text>
+<rect x="60" y="150" width="660" height="40" fill="#eef5ea" stroke="#b9d3ad" stroke-dasharray="6 4"/>
+<text x="74" y="175" font-size="12" fill="#4f7a3c" text-anchor="start" >Back yard</text>
+<rect x="60" y="190" width="420" height="210" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="74" y="216" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">KITCHEN</text>
+<text x="74" y="234" font-size="12" fill="#5a6475" text-anchor="start" >L3 · sensors node</text>
+<rect x="480" y="190" width="240" height="120" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="494" y="216" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">WC / STORE</text>
+<rect x="60" y="400" width="520" height="150" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="74" y="426" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">DINING</text>
+<rect x="60" y="550" width="660" height="290" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="74" y="576" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">LIVING ROOM</text>
+<text x="74" y="594" font-size="12" fill="#5a6475" text-anchor="start" >L2 · devices node + buzzer</text>
+<rect x="580" y="310" width="140" height="240" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<rect x="600" y="325" width="100" height="205" fill="#f1f3f6" stroke="#5a6475" stroke-width="2"/>
+<line x1="600" y1="345.5" x2="700" y2="345.5" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="366.0" x2="700" y2="366.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="386.5" x2="700" y2="386.5" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="407.0" x2="700" y2="407.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="427.5" x2="700" y2="427.5" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="448.0" x2="700" y2="448.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="468.5" x2="700" y2="468.5" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="489.0" x2="700" y2="489.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="600" y1="509.5" x2="700" y2="509.5" stroke="#5a6475" stroke-width="1"/>
+<path d="M650.0 520 V339 m-6 8 l6 -8 l6 8" fill="none" stroke="#1b2230" stroke-width="1.5"/>
+<text x="650.0" y="546" font-size="11" fill="#5a6475" text-anchor="middle" >Stairs</text>
+<rect x="60" y="190" width="660" height="650" fill="none" stroke="#39424f" stroke-width="7"/>
+<rect x="60" y="840" width="660" height="170" fill="#f6f7f9" stroke="#5a6475" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="74" y="866" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">CAR PORCH</text>
+<text x="74" y="884" font-size="12" fill="#5a6475" text-anchor="start" >L1 · porch light</text>
+<rect x="360" y="875" width="300" height="110" rx="34" fill="none" stroke="#d5dbe3" stroke-width="3"/>
+<text x="510" y="936" font-size="12" fill="#a3acb9" text-anchor="middle" >car</text>
+<line x1="60" y1="1010" x2="720" y2="1010" stroke="#39424f" stroke-width="3" stroke-dasharray="14 6"/>
+<text x="390" y="1030" font-size="12" fill="#5a6475" text-anchor="middle" >Gate · road</text>
+<line x1="310" y1="190" x2="370" y2="190" stroke="#fbfcfd" stroke-width="8"/><line x1="310" y1="190" x2="310" y2="250" stroke="#5a6475" stroke-width="2"/><path d="M310 250 A60 60 0 0 1 370 190" fill="none" stroke="#5a6475" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="340" y="183" font-size="11" fill="#1b2230" font-weight="700" text-anchor="middle" >Back door</text>
+<line x1="350" y1="840" x2="420" y2="840" stroke="#fbfcfd" stroke-width="8"/><line x1="350" y1="840" x2="350" y2="770" stroke="#5a6475" stroke-width="2"/><path d="M350 770 A70 70 0 0 1 420 840" fill="none" stroke="#5a6475" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="385" y="858" font-size="11" fill="#1b2230" font-weight="700" text-anchor="middle" >Main door</text>
+<line x1="140" y1="840" x2="290" y2="840" stroke="#ffffff" stroke-width="8"/><line x1="140" y1="840" x2="290" y2="840" stroke="#7fb3e6" stroke-width="2"/><line x1="140" y1="837" x2="290" y2="837" stroke="#7fb3e6" stroke-width="1"/>
+<line x1="490" y1="840" x2="670" y2="840" stroke="#ffffff" stroke-width="8"/><line x1="490" y1="840" x2="670" y2="840" stroke="#7fb3e6" stroke-width="2"/><line x1="490" y1="837" x2="670" y2="837" stroke="#7fb3e6" stroke-width="1"/>
+<path d="M64 194 H305 V234 H104 V396 H64 Z" fill="#eceff3" stroke="#d5dbe3" stroke-width="2"/>
+<circle cx="168" cy="206" r="7" fill="none" stroke="#9aa3b0" stroke-width="2"/>
+<circle cx="168" cy="222" r="7" fill="none" stroke="#9aa3b0" stroke-width="2"/>
+<circle cx="210" cy="206" r="7" fill="none" stroke="#9aa3b0" stroke-width="2"/>
+<circle cx="210" cy="222" r="7" fill="none" stroke="#9aa3b0" stroke-width="2"/>
+<text x="189" y="250" font-size="11" fill="#1b2230" font-weight="700" text-anchor="middle" >Gas stove</text>
+<rect x="240" y="200" width="52" height="28" rx="4" fill="none" stroke="#9aa3b0" stroke-width="2"/>
+<text x="266" y="250" font-size="11" fill="#5a6475" text-anchor="middle" >Sink</text>
+<rect x="68" y="340" width="32" height="50" fill="#e3e7ed" stroke="#9aa3b0"/>
+<text x="112" y="380" font-size="11" fill="#5a6475" text-anchor="start" >Fridge</text>
+<rect x="230" y="445" width="180" height="70" rx="6" fill="none" stroke="#d5dbe3" stroke-width="3"/>
+<rect x="68" y="620" width="26" height="170" fill="#eceff3" stroke="#d5dbe3" stroke-width="2"/>
+<text x="106" y="800" font-size="11" fill="#5a6475" text-anchor="start" >TV console</text>
+<path d="M440 680 h60 v100 h150 v50 h-210 Z" fill="none" stroke="#d5dbe3" stroke-width="3"/>
+<rect x="210" y="760" width="100" height="50" rx="6" fill="none" stroke="#d5dbe3" stroke-width="2"/>
+<circle cx="435" cy="270" r="24" fill="#ffd54f" opacity=".25"/><circle cx="435" cy="270" r="15" fill="#ffd54f" stroke="#b08900" stroke-width="2"/><text x="435" y="275" font-size="12" fill="#5c4400" font-weight="800" text-anchor="middle" >L3</text>
+<circle cx="390" cy="620" r="24" fill="#ffd54f" opacity=".25"/><circle cx="390" cy="620" r="15" fill="#ffd54f" stroke="#b08900" stroke-width="2"/><text x="390" y="625" font-size="12" fill="#5c4400" font-weight="800" text-anchor="middle" >L2</text>
+<circle cx="250" cy="940" r="24" fill="#ffd54f" opacity=".25"/><circle cx="250" cy="940" r="15" fill="#ffd54f" stroke="#b08900" stroke-width="2"/><text x="250" y="945" font-size="12" fill="#5c4400" font-weight="800" text-anchor="middle" >L1</text>
+<rect x="322" y="340" width="148" height="44" rx="7" fill="#23324f" stroke="#15203a"/><rect x="330" y="349" width="18" height="26" rx="2" fill="#cfd5de"/><text x="356" y="359" font-size="12" fill="#ffffff" font-weight="700" text-anchor="start" >ESP32 #3</text><text x="356" y="375" font-size="11" fill="#b9c4d6" text-anchor="start" >Sensors node</text>
+<rect x="116" y="254" width="40.8" height="22" rx="4" fill="#1f5fa8"/><text x="136.4" y="269" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle" letter-spacing=".5">MQ-5</text>
+<path d="M158 254 L172 232" stroke="#5a6475" stroke-width="1.2" fill="none"/>
+<text x="116" y="294" font-size="11" fill="#1f5fa8" font-weight="700" text-anchor="start" >High on the wall, 1–4 m</text>
+<text x="116" y="309" font-size="11" fill="#1f5fa8" text-anchor="start" >from the stove: methane rises</text>
+<path d="M282 346 L157.6 262.1 A150 150 0 0 1 230.7 205.0 Z" fill="#e4572e" opacity=".16" stroke="#e4572e" stroke-opacity=".5" stroke-dasharray="5 4"/>
+<rect x="256" y="346" width="48.0" height="22" rx="4" fill="#e4572e"/><text x="280.0" y="361" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle" letter-spacing=".5">FLAME</text>
+<text x="180" y="386" font-size="11" fill="#b23c1a" font-weight="700" text-anchor="start" >Faces the stove, ~1 m away</text>
+<path d="M460 210 L339.8 330.2 A170 170 0 0 1 295.8 166.0 Z" fill="#2e7d32" opacity=".16" stroke="#2e7d32" stroke-opacity=".5" stroke-dasharray="5 4"/>
+<rect x="434" y="200" width="33.6" height="22" rx="4" fill="#2e7d32"/><text x="450.8" y="215" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle" letter-spacing=".5">PIR</text>
+<text x="490" y="185" font-size="11" fill="#2e7d32" font-weight="700" text-anchor="start" >Watches the back door</text>
+<rect x="106" y="630" width="148" height="44" rx="7" fill="#23324f" stroke="#15203a"/><rect x="114" y="639" width="18" height="26" rx="2" fill="#cfd5de"/><text x="140" y="649" font-size="12" fill="#ffffff" font-weight="700" text-anchor="start" >ESP32 #2</text><text x="140" y="665" font-size="11" fill="#b9c4d6" text-anchor="start" >Devices node</text>
+<circle cx="130" cy="712" r="13" fill="#1d1d1f"/><path d="M148 702 q8 10 0 20 M156 696 q12 16 0 32" fill="none" stroke="#1d1d1f" stroke-width="2"/>
+<text x="172" y="717" font-size="11" fill="#1b2230" font-weight="700" text-anchor="start" >Buzzer (heard upstairs too)</text>
+<rect x="500" y="616" width="44" height="30" rx="3" fill="#2b3446"/><rect x="516" y="646" width="12" height="8" fill="#2b3446"/>
+<text x="554" y="630" font-size="11" fill="#1b2230" font-weight="700" text-anchor="start" >HomeShield PC</text>
+<text x="554" y="645" font-size="11" fill="#5a6475" text-anchor="start" >+ Wi-Fi router</text>
+<rect x="670" y="560" width="33.6" height="22" rx="4" fill="#7a8494"/><text x="686.8" y="575" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle" letter-spacing=".5">CAM</text>
+<text x="662" y="598" font-size="11" fill="#5a6475" text-anchor="end" >Camera: falls</text>
+<rect x="670" y="850" width="33.6" height="22" rx="4" fill="#7a8494"/><text x="686.8" y="865" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle" letter-spacing=".5">CAM</text>
+<text x="662" y="866" font-size="11" fill="#5a6475" text-anchor="end" >Camera: faces at the gate</text>
+<text x="900" y="136" font-size="14" fill="#1b2230" font-weight="800" text-anchor="start" letter-spacing="2">FIRST FLOOR</text>
+<rect x="900" y="190" width="400" height="370" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="914" y="216" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">BEDROOM 2</text>
+<text x="914" y="234" font-size="12" fill="#5a6475" text-anchor="start" >L5</text>
+<rect x="1300" y="190" width="260" height="150" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="1314" y="216" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">BATHROOM</text>
+<rect x="1300" y="340" width="260" height="220" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="1314" y="366" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">LANDING</text>
+<rect x="1440" y="355" width="100" height="170" fill="#f1f3f6" stroke="#5a6475" stroke-width="2"/>
+<line x1="1440" y1="372.0" x2="1540" y2="372.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="389.0" x2="1540" y2="389.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="406.0" x2="1540" y2="406.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="423.0" x2="1540" y2="423.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="440.0" x2="1540" y2="440.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="457.0" x2="1540" y2="457.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="474.0" x2="1540" y2="474.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="491.0" x2="1540" y2="491.0" stroke="#5a6475" stroke-width="1"/>
+<line x1="1440" y1="508.0" x2="1540" y2="508.0" stroke="#5a6475" stroke-width="1"/>
+<path d="M1490.0 515 V369 m-6 8 l6 -8 l6 8" fill="none" stroke="#1b2230" stroke-width="1.5"/>
+<text x="1490.0" y="541" font-size="11" fill="#5a6475" text-anchor="middle" >Stairs</text>
+<rect x="900" y="560" width="660" height="280" fill="#fbfcfd" stroke="#5a6475" stroke-width="3"/>
+<text x="914" y="586" font-size="13" fill="#1b2230" font-weight="700" text-anchor="start" letter-spacing="1.2">MASTER BEDROOM</text>
+<text x="914" y="604" font-size="12" fill="#5a6475" text-anchor="start" >L4 · SOS node</text>
+<rect x="900" y="190" width="660" height="650" fill="none" stroke="#39424f" stroke-width="7"/>
+<rect x="900" y="840" width="660" height="70" fill="#f6f7f9" stroke="#5a6475" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="914" y="880" font-size="12" fill="#5a6475" font-weight="700" text-anchor="start" >BALCONY (over the porch)</text>
+<line x1="1300" y1="400" x2="1300" y2="460" stroke="#fbfcfd" stroke-width="8"/><line x1="1300" y1="400" x2="1240" y2="400" stroke="#5a6475" stroke-width="2"/><path d="M1240 400 A60 60 0 0 0 1300 460" fill="none" stroke="#5a6475" stroke-width="1.2" stroke-dasharray="4 3"/>
+<line x1="1320" y1="560" x2="1380" y2="560" stroke="#fbfcfd" stroke-width="8"/><line x1="1320" y1="560" x2="1320" y2="500" stroke="#5a6475" stroke-width="2"/><path d="M1320 500 A60 60 0 0 1 1380 560" fill="none" stroke="#5a6475" stroke-width="1.2" stroke-dasharray="4 3"/>
+<line x1="1370" y1="340" x2="1420" y2="340" stroke="#fbfcfd" stroke-width="8"/><line x1="1370" y1="340" x2="1370" y2="290" stroke="#5a6475" stroke-width="2"/><path d="M1370 290 A50 50 0 0 1 1420 340" fill="none" stroke="#5a6475" stroke-width="1.2" stroke-dasharray="4 3"/>
+<line x1="1020" y1="190" x2="1200" y2="190" stroke="#ffffff" stroke-width="8"/><line x1="1020" y1="190" x2="1200" y2="190" stroke="#7fb3e6" stroke-width="2"/><line x1="1020" y1="187" x2="1200" y2="187" stroke="#7fb3e6" stroke-width="1"/>
+<line x1="1000" y1="840" x2="1460" y2="840" stroke="#ffffff" stroke-width="8"/><line x1="1000" y1="840" x2="1460" y2="840" stroke="#7fb3e6" stroke-width="2"/><line x1="1000" y1="837" x2="1460" y2="837" stroke="#7fb3e6" stroke-width="1"/>
+<rect x="930" y="260" width="110" height="200" rx="6" fill="none" stroke="#d5dbe3" stroke-width="3"/><rect x="930" y="260" width="110" height="34" rx="6" fill="#eceff3" stroke="#d5dbe3" stroke-width="2"/>
+<rect x="1100" y="600" width="190" height="210" rx="8" fill="none" stroke="#d5dbe3" stroke-width="3"/><rect x="1100" y="600" width="190" height="40" rx="8" fill="#eceff3" stroke="#d5dbe3" stroke-width="2"/>
+<rect x="1300" y="600" width="40" height="40" fill="#eceff3" stroke="#d5dbe3" stroke-width="2"/>
+<text x="1348" y="626" font-size="11" fill="#5a6475" text-anchor="start" >bedside</text>
+<circle cx="1160" cy="380" r="24" fill="#ffd54f" opacity=".25"/><circle cx="1160" cy="380" r="15" fill="#ffd54f" stroke="#b08900" stroke-width="2"/><text x="1160" y="385" font-size="12" fill="#5c4400" font-weight="800" text-anchor="middle" >L5</text>
+<circle cx="1010" cy="710" r="24" fill="#ffd54f" opacity=".25"/><circle cx="1010" cy="710" r="15" fill="#ffd54f" stroke="#b08900" stroke-width="2"/><text x="1010" y="715" font-size="12" fill="#5c4400" font-weight="800" text-anchor="middle" >L4</text>
+<circle cx="1320" cy="620" r="13" fill="#e5483f" stroke="#b3261e" stroke-width="2"/><text x="1320" y="624" font-size="9" fill="#ffffff" font-weight="800" text-anchor="middle" >SOS</text>
+<rect x="1350" y="650" width="148" height="44" rx="7" fill="#23324f" stroke="#15203a"/><rect x="1358" y="659" width="18" height="26" rx="2" fill="#cfd5de"/><text x="1384" y="669" font-size="12" fill="#ffffff" font-weight="700" text-anchor="start" >ESP32 #1</text><text x="1384" y="685" font-size="11" fill="#b9c4d6" text-anchor="start" >SOS node</text>
+<text x="1350" y="716" font-size="11" fill="#b3261e" font-weight="700" text-anchor="start" >Button within reach of the bed;</text>
+<text x="1350" y="731" font-size="11" fill="#b3261e" text-anchor="start" >board plugged in behind it</text>
+<rect x="40" y="1012" width="1580" height="96" rx="10" fill="#f6f8fb" stroke="#c9d1dc"/>
+<text x="64" y="1040" font-size="14" fill="#1b2230" font-weight="700" text-anchor="start" >ESP32 #1 · SOS node</text>
+<text x="64" y="1062" font-size="13" fill="#5a6475" text-anchor="start" >Master bedroom, bedside</text>
+<text x="64" y="1084" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >GPIO 33: SOS button (to GND)</text>
+<text x="589" y="1040" font-size="14" fill="#1b2230" font-weight="700" text-anchor="start" >ESP32 #2 · Devices node</text>
+<text x="589" y="1062" font-size="13" fill="#5a6475" text-anchor="start" >Living room, TV console</text>
+<text x="589" y="1084" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >GPIO 23/22/21/19/18: L1–L5 · GPIO 25: buzzer</text>
+<text x="1114" y="1040" font-size="14" fill="#1b2230" font-weight="700" text-anchor="start" >ESP32 #3 · Sensors node</text>
+<text x="1114" y="1062" font-size="13" fill="#5a6475" text-anchor="start" >Kitchen, by the stove</text>
+<text x="1114" y="1084" font-size="13" fill="#c26a00" font-weight="700" text-anchor="start" >GPIO 34: MQ-5 · 35: flame · 32: PIR</text>
+<circle cx="75" cy="1145" r="24" fill="#ffd54f" opacity=".25"/><circle cx="75" cy="1145" r="15" fill="#ffd54f" stroke="#b08900" stroke-width="2"/><text x="75" y="1150" font-size="12" fill="#5c4400" font-weight="800" text-anchor="middle" >L1</text>
+<text x="98" y="1150" font-size="13" fill="#5a6475" text-anchor="start" >Room light (an LED)</text>
+<rect x="380" y="1123" width="86" height="44" rx="7" fill="#23324f" stroke="#15203a"/><rect x="388" y="1132" width="18" height="26" rx="2" fill="#cfd5de"/><text x="414" y="1142" font-size="12" fill="#ffffff" font-weight="700" text-anchor="start" >ESP32</text><text x="414" y="1158" font-size="11" fill="#b9c4d6" text-anchor="start" >node</text>
+<text x="476" y="1150" font-size="13" fill="#5a6475" text-anchor="start" >ESP32 board</text>
+<rect x="700" y="1134" width="33.6" height="22" rx="4" fill="#2e7d32"/><text x="716.8" y="1149" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle" letter-spacing=".5">PIR</text>
+<text x="744" y="1150" font-size="13" fill="#5a6475" text-anchor="start" >Sensor, and what it watches</text>
+<circle cx="1033" cy="1145" r="13" fill="#e5483f"/>
+<text x="1058" y="1150" font-size="13" fill="#5a6475" text-anchor="start" >SOS button</text>
+<rect x="1340" y="1134" width="33.6" height="22" rx="4" fill="#7a8494"/><text x="1356.8" y="1149" font-size="11" fill="#ffffff" font-weight="700" text-anchor="middle" letter-spacing=".5">CAM</text>
+<text x="1388" y="1150" font-size="13" fill="#5a6475" text-anchor="start" >Existing camera (optional)</text>
+</svg>

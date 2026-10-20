@@ -8,7 +8,7 @@ It also turns ESP32 boards into **smart-home nodes**. Flash one sketch, set the 
 
 Built as a Final-Year Project at the **International Islamic University Malaysia (IIUM), Kulliyyah of Information and Communication Technology**.
 
-> One pipeline. Three detectors. Per-camera worker threads sharing one set of YOLO / ONNX models on the GPU.
+> One pipeline. Three detectors. Per-camera worker threads on one GPU, each with its own small pose model and sharing the fire and face models.
 
 ---
 
@@ -525,7 +525,7 @@ Advanced settings (not in the UI yet; set them with `POST /api/settings`):
 HomeShield is a single Flask process that runs one **CameraManager** with one worker thread per camera. Every worker shares a single set of YOLO / InsightFace models on the GPU and publishes results to an async **EventBus** that handles SQLite writes, snapshot encoding, and Server-Sent Events to the browser.
 
 Key design choices:
-- **Per-camera worker threads** share one set of YOLO / ONNX models on the GPU. Adding a camera does not duplicate VRAM.
+- **Per-camera worker threads**, each with its own copy of the pose model, so cameras don't wait for one another (the nano model is ~6 MB; a copy adds about 20 MB of GPU memory). Fire and face models are shared and taken in turn. Measured on an RTX 4070 with `yolo11n-pose`: two cameras analyse 44 frames a second between them, up from 34 with one shared pose model.
 - **Per-camera tracking** — each camera keeps its own ByteTrack state even though the pose model is shared, so one camera's frames never update or expire another camera's person IDs.
 - **Newest-frame capture** — live cameras are read on a separate grabber thread and the pipeline always takes the newest frame, so a slow GPU never makes the feed (and the alerts) drift behind real time. Video files skip the frames that are already late in the same way, and each analysed frame is timed by the file's own clock.
 - **Frame skipping**: pose runs every frame to keep the FSM responsive; fire runs every 2nd frame; face every 5th.

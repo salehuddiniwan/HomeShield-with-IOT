@@ -777,7 +777,7 @@ def create_app(*, db_path: str = "homeshield.db",
             "ok": True,
             "running": manager.is_running(),
             "models": {
-                "pose_loaded": models.pose_model is not None,
+                "pose_loaded": bool(models.pose_weights_path),
                 "fire_loaded": models.fire_model is not None,
                 "face_available": bool(models.face_engine
                                        and models.face_engine.available),

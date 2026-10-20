@@ -10,48 +10,51 @@ import homeshield.pipeline as pipeline_mod
 from homeshield.pipeline import CameraPipeline, FaceWorker
 
 
-# ---- per-camera tracker isolation -----------------------------------------
+# ---- a pose model per camera ----------------------------------------------
 
-class _Tracker:
+class _PoseModel:
+    """Stands in for an Ultralytics model, which keeps its tracker on itself."""
+
     def __init__(self):
         self.cameras_seen = []
 
-
-class _Predictor:
-    pass
-
-
-class _PoseModel:
-    """Mimics how Ultralytics stores tracker state on the shared predictor."""
-
-    def __init__(self):
-        self.predictor = None
-
     def track(self, frame, **kw):
-        if self.predictor is None:
-            self.predictor = _Predictor()
-            self.predictor.trackers = [_Tracker()]
-        self.predictor.trackers[0].cameras_seen.append(int(frame[0, 0, 0]))
+        self.cameras_seen.append(int(frame[0, 0, 0]))
         return [SimpleNamespace(boxes=None, keypoints=None)]
 
 
-def _models(pose=None, face=None):
-    return SimpleNamespace(pose_model=pose, fire_model=None, face_engine=face,
-                           device="cpu", half=False, pose_weights_path="",
-                           infer_lock=threading.Lock())
+def _models(face=None):
+    built = []
+
+    def new_pose_model():
+        built.append(_PoseModel())
+        return built[-1]
+
+    return SimpleNamespace(new_pose_model=new_pose_model, pose_gen=1, built=built,
+                           fire_model=None, face_engine=face, device="cpu", half=False,
+                           pose_weights_path="", infer_lock=threading.Lock())
 
 
-def test_each_camera_gets_its_own_tracker(monkeypatch):
-    monkeypatch.setattr(pipeline_mod, "_new_trackers", lambda predictor: [_Tracker()])
-    models = _models(pose=_PoseModel())
+def test_each_camera_runs_its_own_pose_model_and_sees_only_its_frames():
+    models = _models()
     settings = {"fire_enabled": False}
     cams = {cid: CameraPipeline(camera_id=cid, camera_name=str(cid),
                                 models=models, settings=settings) for cid in (1, 2, 3)}
-    for _ in range(4):
+
+    def frame_round():
         for cid, pipe in cams.items():
             pipe.process(np.full((8, 8, 3), cid, np.uint8), ts=time.time())
+
+    for _ in range(4):
+        frame_round()
+    assert len(models.built) == 3                       # one copy each, built once
     for cid, pipe in cams.items():
-        assert pipe._trackers[0].cameras_seen == [cid] * 4
+        assert pipe._pose.cameras_seen == [cid] * 4
+    # A new pose choice in Settings: every camera builds a new copy on its next frame.
+    models.pose_gen = 2
+    frame_round()
+    assert len(models.built) == 6
+    assert all(pipe._pose.cameras_seen == [cid] for cid, pipe in cams.items())
 
 
 # ---- face worker: quality gate + intruder confirmation --------------------

@@ -60,7 +60,8 @@ class _FakeFireModel:
 
 
 def _pipeline(fire_model, **settings):
-    models = SimpleNamespace(pose_model=None, fire_model=fire_model, face_engine=None,
+    models = SimpleNamespace(new_pose_model=lambda: None, pose_gen=0,
+                             fire_model=fire_model, face_engine=None,
                              device="cpu", half=False, pose_weights_path="",
                              infer_lock=threading.Lock())
     s = {"fire_every_n": 1, "fire_cooldown": 5, **settings}

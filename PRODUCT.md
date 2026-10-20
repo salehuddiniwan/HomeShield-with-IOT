@@ -45,7 +45,7 @@ The only home CCTV dashboard that runs three production-quality anomaly detector
 
 **Zones:** polygon safe zones (suppress lying/inactivity alerts on beds/sofas) and danger zones (child-entry alerts for kitchens, balconies, stairs)
 
-**Performance:** per-camera worker threads share one set of YOLO/ONNX models on the GPU; adding a camera does not duplicate VRAM. Async face inference, lazy JPEG encoding, and non-blocking event publishing keep the capture loop from stalling on I/O
+**Performance:** per-camera worker threads on one GPU; each camera runs its own copy of the small pose model (so cameras don't queue for it, about 20 MB of GPU memory each) and shares the fire and face models. Async face inference, lazy JPEG encoding, and non-blocking event publishing keep the capture loop from stalling on I/O
 
 **Platform constraints:** Windows-primary (bundled InsightFace wheel for CPython 3.11 x64); face detection on CPU is unusable in practice and should be disabled on CPU-only setups
 

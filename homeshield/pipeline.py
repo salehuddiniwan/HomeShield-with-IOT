@@ -70,19 +70,6 @@ def list_fire_models() -> list[dict[str, str]]:
     return _list_pt(paths.FIRE_WEIGHTS_DIR, paths.FIRE_WEIGHTS_DIR / "weights")
 
 
-def _new_trackers(predictor) -> list:
-    """Fresh tracker list for `predictor`, built by Ultralytics itself.
-
-    on_predict_start(persist=False) always rebuilds `predictor.trackers` from
-    the predictor's tracker config. Calling it (rather than re-implementing
-    it) keeps this working across Ultralytics versions: 8.4 moved the YAML
-    loader and added a re-ID hook for BoT-SORT.
-    """
-    from ultralytics.trackers.track import on_predict_start
-    on_predict_start(predictor, persist=False)
-    return predictor.trackers
-
-
 # ---- Shared models --------------------------------------------------------
 
 class Models:
@@ -90,24 +77,31 @@ class Models:
 
     `ensure_loaded()` is idempotent: it loads what is missing, unloads what was
     disabled, and reloads a model whose weights or precision setting changed.
+
+    The pose model is the exception: it is chosen here but each camera loads
+    its own copy (`new_pose_model()`, used by CameraPipeline), so cameras don't
+    queue for one model. Fire and face stay shared, behind `infer_lock`.
     """
 
     def __init__(self, settings):
         self.settings = settings
         self._lock = threading.RLock()
-        # Serializes inference across per-camera worker threads. Ultralytics
-        # YOLO predict()/track() share mutable predictor state and are NOT
-        # thread-safe: concurrent calls from two cameras interleave, and one
-        # camera can come back with detections computed from the OTHER
-        # camera's frame (e.g. a fire on Camera 1 attributed to Camera 2).
+        # Serializes inference on the shared fire and face models across
+        # per-camera worker threads. Ultralytics YOLO predict()/track() share
+        # mutable predictor state and are NOT thread-safe: concurrent calls
+        # from two cameras interleave, and one camera can come back with
+        # detections computed from the OTHER camera's frame (e.g. a fire on
+        # Camera 1 attributed to Camera 2).
         self.infer_lock = threading.Lock()
-        self.pose_model = None
         self.fire_model = None
         self.face_engine = None
         self.device = self._resolve_device()
         self.half = False
         self.pose_weights_path: str = ""
         self.fire_weights_path: str = ""
+        # Bumped whenever the pose choice (weights or FP16) changes or the models
+        # are reloaded: each camera rebuilds its own copy when it sees a new one.
+        self.pose_gen = 0
         self._pose_key: Optional[tuple] = None
         self._fire_key: Optional[tuple] = None
 
@@ -117,8 +111,8 @@ class Models:
             # in detections; it is a no-op on CPU.
             self.half = bool(self.settings.get("use_fp16", True)) and self.device != "cpu"
             pose_key = (self.settings.get("yolo_model", "yolo11n-pose.pt"), self.half)
-            if self.pose_model is None or self._pose_key != pose_key:
-                self._load_pose(pose_key)
+            if self._pose_key != pose_key:
+                self._choose_pose(pose_key)
 
             fire_key = (self.settings.get("fire_model", "best.pt"), self.half)
             if self.settings.get("fire_enabled", True):
@@ -137,10 +131,22 @@ class Models:
 
     def reload(self) -> None:
         with self._lock:
-            self.pose_model = None
+            self._pose_key = None
             self.fire_model = None
             self.face_engine = None
         self.ensure_loaded()
+
+    def new_pose_model(self):
+        """A fresh copy of the chosen pose model, for one camera's use only.
+
+        Ultralytics keeps ByteTrack state on the model and isn't thread-safe,
+        so a shared model meant every camera waited its turn and had its
+        tracks swapped in and out. The nano model is ~6 MB, so a copy per
+        camera is cheap, and each copy's tracker only ever sees its camera.
+        """
+        with self._lock:
+            path = self.pose_weights_path
+        return self._yolo(path) if path else None
 
     # ---- internals ------------------------------------------------------
 
@@ -163,7 +169,7 @@ class Models:
             log.warning("could not move %s to device %s: %s", path, self.device, e)
         return model
 
-    def _load_pose(self, key: tuple) -> None:
+    def _choose_pose(self, key: tuple) -> None:
         weights = key[0]
         path = resolve_weights(weights, [
             paths.POSE_WEIGHTS_DIR, paths.PROJECT_ROOT, Path.cwd()
@@ -172,10 +178,10 @@ class Models:
             avail = list_pose_models()
             if avail:
                 path = avail[0]["path"]
-        log.info("loading pose: %s (fp16=%s)", path, self.half)
-        self.pose_model = self._yolo(path)
+        log.info("pose model: %s (fp16=%s), one copy per camera", path, self.half)
         self.pose_weights_path = path
         self._pose_key = key
+        self.pose_gen += 1
 
     def _load_fire(self, key: tuple) -> None:
         weights = key[0]
@@ -422,8 +428,9 @@ class CameraPipeline:
             inactivity_s=float(self.settings.get("inactivity_seconds", 300)),
         )
         self.fall_state = MultiPersonState(self.cfg)
-        # This camera's own ByteTrack state (see _track()).
-        self._trackers: Optional[list] = None
+        # This camera's own pose model and the Models.pose_gen it was built for.
+        self._pose = None
+        self._pose_gen: Optional[int] = None
         self._pose_errors = 0
         # track id -> {"person_id", "name", "category"} once a face is recognised
         self._identity: dict[int, dict[str, Any]] = {}
@@ -509,38 +516,29 @@ class CameraPipeline:
 
     # ---- stages ---------------------------------------------------------
 
-    def _track(self, model, frame, device):
-        """Pose + ByteTrack using this camera's own tracker state.
-
-        Ultralytics keeps tracker state on the model's predictor, which all
-        cameras share, so with two cameras each frame from one camera updated
-        and expired the other camera's tracks: IDs churned every frame and the
-        per-person fall FSMs never accumulated history. Swapping this camera's
-        trackers in before each call (under infer_lock) isolates them.
-        Never delete `predictor.trackers`: Model.track() would then register
-        its tracking callbacks a second time.
-        """
-        pred = model.predictor
-        if pred is not None and hasattr(pred, "trackers"):
-            if self._trackers is None:
-                self._trackers = _new_trackers(pred)
-            pred.trackers = self._trackers
-        out = model.track(
-            frame,
-            imgsz=self.cfg.imgsz, conf=self.cfg.conf,
-            persist=True, tracker=self.cfg.tracker,
-            verbose=False, device=device, half=self.models.half,
-        )
-        self._trackers = model.predictor.trackers
-        return out
+    def _pose_model(self):
+        """This camera's own copy of the pose model (Models.new_pose_model),
+        rebuilt when the pose choice changes. Nothing else touches it, so the
+        pose stage needs no lock, and its ByteTrack only ever sees this camera:
+        a shared model mixed every camera's tracks, so IDs churned and the
+        per-person fall FSMs never built up history."""
+        gen = self.models.pose_gen
+        if self._pose is None or self._pose_gen != gen:
+            self._pose = self.models.new_pose_model()
+            self._pose_gen = gen
+        return self._pose
 
     def _run_pose(self, frame, ts, H, W, device, res: FrameResult) -> None:
-        model = self.models.pose_model
-        if model is None:
-            return
         try:
-            with self.models.infer_lock:
-                tr = self._track(model, frame, device)
+            model = self._pose_model()
+            if model is None:
+                return
+            tr = model.track(
+                frame,
+                imgsz=self.cfg.imgsz, conf=self.cfg.conf,
+                persist=True, tracker=self.cfg.tracker,
+                verbose=False, device=device, half=self.models.half,
+            )
             if tr:
                 res.persons = self.fall_state.step(tr[0], H, W, ts)
             self._pose_errors = 0

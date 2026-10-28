@@ -337,6 +337,23 @@ def test_closing_the_incident_in_the_dashboard_stops_the_buzzer(app):
     assert poll().startswith("STOP ")
 
 
+def test_undoing_a_close_brings_the_incident_and_its_buzzer_back(app):
+    alarm = app.extensions["homeshield_alarm"]
+    ev = emit(EventBus(db_path=app.config["DB"]), "fire_detected", time.time())
+    alarm.on_incident(ev.incident["change"], ev.incident)
+    admin = _login(app, "admin", "admin")
+    guest = _guest(app, admin)
+    url = f"/api/incidents/{ev.incident_id}"
+    admin.post(url + "/resolve", json={"outcome": "acknowledged"})
+    assert not alarm.status()["sounding"]
+    assert guest.post(url + "/reopen").status_code == 409        # only the person who closed it
+    r = admin.post(url + "/reopen")
+    assert r.status_code == 200 and r.get_json()["status"] == "open" and r.get_json()["resolved_by"] is None
+    assert alarm.status()["sounding"] and alarm.status()["kind"] == "fire"
+    assert admin.post(url + "/reopen").status_code == 409        # already open
+    assert admin.post("/api/incidents/9999/reopen").status_code == 404
+
+
 def test_anyone_signed_in_can_silence_but_only_admins_test_and_set_up(app):
     alarm = app.extensions["homeshield_alarm"]
     admin = _login(app, "admin", "admin")

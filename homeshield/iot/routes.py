@@ -110,8 +110,8 @@ def register(app: Flask, hub: IotHub, *, username: Callable[[], str],
     @app.route("/api/sensors/<int:device_id>/acknowledge", methods=["POST"])
     @require_login
     def api_sensor_ack(device_id: int):
-        sensors().acknowledge(device_id, username())
-        return jsonify({"ok": True})
+        iid = sensors().acknowledge(device_id, username())
+        return jsonify({"ok": True, "incident_id": iid})
 
     @app.route("/api/sensors/<int:device_id>/sound", methods=["POST"])
     @require_login
@@ -192,7 +192,8 @@ def register(app: Flask, hub: IotHub, *, username: Callable[[], str],
     @app.route("/api/automations/location", methods=["PUT"])
     @require_admin
     def api_automation_location():
-        return jsonify(automations().set_location(body().get("city"), username()))
+        b = body()
+        return jsonify(automations().set_location(b.get("city"), username(), b.get("lat"), b.get("lon")))
 
     # ---- setting things up (admins) --------------------------------------------------
 

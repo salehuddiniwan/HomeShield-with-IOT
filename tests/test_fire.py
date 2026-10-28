@@ -85,3 +85,36 @@ def test_pipeline_ignores_non_alert_classes():
     frame = np.zeros((480, 640, 3), np.uint8)
     rs = [pipe.process(frame, ts=float(i)) for i in range(6)]
     assert not any(r.fire_alert or r.events for r in rs)
+
+
+class _Zones:
+    """A zone store with one fireplace zone, already in frame pixels."""
+    def __init__(self, polygon): self.polygon = polygon
+    def danger_zones_for(self, cid, w, h): return []
+    def fireplace_zones_for(self, cid, w, h):
+        return [{"zone_id": 1, "zone_name": "Fireplace", "polygon_scaled": self.polygon}]
+    def for_camera(self, cid): return []
+
+
+HEARTH = [[0, 0], [100, 0], [100, 100], [0, 100]]
+
+
+def _pipeline_with_fireplace(dets):
+    pipe = _pipeline(_FakeFireModel(dets))
+    pipe.zone_store = _Zones(HEARTH)
+    return pipe
+
+
+def test_fire_inside_a_fireplace_zone_never_alerts():
+    pipe = _pipeline_with_fireplace([(10, 10, 50, 50, 0.9, 0), (20, 0, 60, 30, 0.8, 2)])   # fire and smoke
+    frame = np.zeros((480, 640, 3), np.uint8)
+    rs = [pipe.process(frame, ts=100.0 + i * 0.1) for i in range(8)]
+    assert not any(r.fire_alert or r.events for r in rs)
+    assert rs[-1].fires and all(d["ignored"] for d in rs[-1].fires)    # still drawn, marked ignored
+
+
+def test_a_fire_spreading_out_of_the_fireplace_still_alerts():
+    pipe = _pipeline_with_fireplace([(10, 10, 240, 240, 0.9, 0)])      # mostly outside the hearth
+    frame = np.zeros((480, 640, 3), np.uint8)
+    rs = [pipe.process(frame, ts=100.0 + i * 0.1) for i in range(4)]
+    assert rs[-1].fire_alert and [e.event_type for e in rs[2].events] == ["fire_detected"]

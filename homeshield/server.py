@@ -11,10 +11,13 @@ import re
 import queue
 import secrets
 import threading
+import time
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Optional
 
+import cv2
+import numpy as np
 from flask import (Flask, Response, abort, current_app, has_request_context,
                    jsonify, make_response, render_template, request,
                    send_from_directory, session)
@@ -42,6 +45,7 @@ from .persons import IntruderStore, PersonStore
 from .pipeline import Models, list_fire_models, list_pose_models
 from .presence import Presence
 from .settings import SettingsStore
+from .weather import Weather
 from .zones import ZoneStore
 
 log = logging.getLogger(__name__)
@@ -120,11 +124,11 @@ _INT_KEYS = ("inactivity_seconds", "alert_cooldown", "yolo_imgsz",
              "fire_every_n", "face_every_n", "fire_confirm_frames",
              "fire_confirm_window", "face_min_size", "intruder_confirm_frames",
              "buzzer_max_seconds", "clip_pre_seconds", "clip_post_seconds",
-             "clip_keep_days")
+             "clip_keep_days", "stream_fps", "stream_max_width")
 _FLOAT_KEYS = ("fall_threshold", "yolo_confidence", "fire_confidence",
                "face_match_threshold", "face_min_det_score")
 _BOOL_KEYS = ("use_fp16", "fall_enabled", "fire_enabled", "face_enabled",
-              "buzzer_enabled", "clips_enabled", "guests_unlock")
+              "buzzer_enabled", "clips_enabled", "guests_unlock", "hw_decode")
 
 
 def _to_bool(v: Any) -> bool:
@@ -265,6 +269,39 @@ def _category(data: dict[str, Any]) -> str:
     if value not in PERSON_CATEGORIES:
         raise BadInput("Category must be child, adult or elderly")
     return value
+
+
+# A face photo chosen on the Register a person card. The page shrinks it first,
+# so this only stops a file that was sent as it is from being huge.
+PHOTO_MAX_BYTES = 12 * 1024 * 1024
+PHOTO_MAX_SIDE = 1920
+
+
+def _photo_form():
+    """The fields of a photo upload, refused before it is read when it is too big."""
+    if (request.content_length or 0) > PHOTO_MAX_BYTES + 64 * 1024:
+        raise BadInput(f"That photo is too large ({PHOTO_MAX_BYTES // 2**20} MB max).")
+    return request.form
+
+
+def _photo_upload():
+    """The uploaded "photo" as a BGR picture, at most PHOTO_MAX_SIDE on its long side."""
+    f = request.files.get("photo")
+    if f is None:
+        raise BadInput("Choose a photo of the person's face.")
+    data = f.read(PHOTO_MAX_BYTES + 1)
+    if len(data) > PHOTO_MAX_BYTES:
+        raise BadInput(f"That photo is too large ({PHOTO_MAX_BYTES // 2**20} MB max).")
+    img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR) if data else None
+    if img is None:
+        raise BadInput("HomeShield couldn't read that file as a picture. "
+                       "Use a JPG or PNG photo.")
+    h, w = img.shape[:2]
+    k = PHOTO_MAX_SIDE / max(h, w)
+    if k < 1:
+        img = cv2.resize(img, (max(1, round(w * k)), max(1, round(h * k))),
+                         interpolation=cv2.INTER_AREA)
+    return img
 
 
 def _polygon(value: Any) -> list[list[float]]:
@@ -469,6 +506,9 @@ def create_app(*, db_path: str = "homeshield.db",
                                    monitoring=_monitoring, set_monitoring=_set_monitoring)
     bus.add_incident_listener(automations.on_incident)
     automations.start()
+    # The Live page's weather is for the same place as sunrise and sunset in automations.
+    weather = Weather(automations.location)
+    app.extensions["homeshield_weather"] = weather
     if iot is None:
         iot = os.environ.get("HOMESHIELD_IOT", "1") != "0"
     if iot:
@@ -836,9 +876,18 @@ def create_app(*, db_path: str = "homeshield.db",
             return abort(404)
 
         def gen():
-            version = -1
+            # At most stream_fps frames a second to this viewer (0: every analysed
+            # frame). Frames in between are never encoded for it, which is most of
+            # the CPU a viewer costs, here and in the browser decoding them.
+            version, sent = -1, 0.0
             while True:
+                fps = _int_arg(settings.get("stream_fps", 10), 10, 0, 60)
+                if fps:
+                    wait = sent + 1.0 / fps - time.time()
+                    if wait > 0:
+                        time.sleep(wait)
                 jpeg, version = latest.get_blocking(version, timeout=1.0)
+                sent = time.time()
                 # Camera removed or system stopped: end the stream instead of
                 # replaying its last frame to the open tab forever.
                 if manager.latest(cid) is not latest:
@@ -971,12 +1020,14 @@ def create_app(*, db_path: str = "homeshield.db",
             return jsonify({"error": "That incident no longer exists"}), 404
         inc["clip_recording"] = clips.recording(iid)
         # What automations did about it: the sensor's own response from a few
-        # minutes before (its warning level comes first), a camera's from the start.
+        # minutes before (its warning level comes first), a camera's from the start,
+        # up to a minute after its last detection. Later runs from the same sensor
+        # belong to a later incident, even while this one is still open.
         did, cid = inc.get("device_id"), inc.get("camera_id")
         start = (inc.get("started_ts") or 0) - (300 if did is not None else 5)
         inc["actions"] = iot_hub.store.incident_runs(
             incident_id=iid, device_id=did, camera_id=cid, start=start,
-            end=inc.get("resolved_at") or None)
+            end=(inc.get("last_ts") or inc.get("started_ts") or 0) + 60)
         dev = iot_hub.store.device(did) if did is not None else None
         if dev is not None:
             inc["device_name"] = dev["name"]
@@ -999,6 +1050,39 @@ def create_app(*, db_path: str = "homeshield.db",
         alarm.on_incident("resolved", inc)
         sensor_engine.on_incident("resolved", inc)
         return jsonify(inc)
+
+    @app.route("/api/incidents/<int:iid>/reopen", methods=["POST"])
+    @require_login
+    def api_incident_reopen(iid: int):
+        """Undo closing an incident, just after, by the person who closed it."""
+        me = (user_store.get(session_user_id()) or {}).get("username") or "unknown"
+        inc = incident_store.reopen(iid, by=me)
+        if inc is None:
+            if incident_store.get(iid) is None:
+                return jsonify({"error": "That incident no longer exists"}), 404
+            return jsonify({"error": "It can only be undone by the person who closed it, "
+                                     "within two minutes of closing it."}), 409
+        bus.broadcast("incident", {**inc, "change": "reopened", "reopened_by": me})
+        alarm.on_incident("reopened", inc)
+        sensor_engine.on_incident("reopened", inc)
+        return jsonify(inc)
+
+    # ===== Weather (weather.py: Open-Meteo, only the home's coordinates leave) =====
+
+    @app.route("/api/weather")
+    @require_login
+    def api_weather():
+        return jsonify(weather.get())
+
+    @app.route("/api/weather/places")
+    @require_admin
+    def api_weather_places():
+        """Towns matching ?q=, to pick the home location in Settings."""
+        try:
+            return jsonify(weather.places(request.args.get("q", "")))
+        except Exception as e:                       # offline, or the service is down
+            log.info("place search failed: %s", e)
+            return jsonify({"error": "HomeShield couldn't reach the place search. Check the internet connection."}), 502
 
     # ===== Notifications ================================================
 
@@ -1175,7 +1259,10 @@ def create_app(*, db_path: str = "homeshield.db",
     @app.route("/api/persons", methods=["POST"])
     @require_admin
     def api_persons_add():
-        data = request.get_json(silent=True) or {}
+        # From a camera (JSON: name, category, camera_id) or from a photo file
+        # (a form: name, category, photo).
+        from_photo = request.mimetype == "multipart/form-data"
+        data = _photo_form() if from_photo else (request.get_json(silent=True) or {})
         name = _text(data, "name", "Name")
         category = _category(data)
         cid = data.get("camera_id")
@@ -1186,23 +1273,30 @@ def create_app(*, db_path: str = "homeshield.db",
                                      "registered. Turn it on in Settings > Face "
                                      "recognition. "
                                      "Install insightface + onnxruntime."}), 400
-        if cid is None:
-            return jsonify({"error": "Pick a camera to capture from."}), 400
-        cam_id = _int_arg(cid, -1, 0, 2**31 - 1)
-        latest = manager.latest(cam_id) if cam_id >= 0 else None
-        if latest is None:
-            return jsonify({"error": "That camera isn't running. Start monitoring "
-                                     "or check the camera, then try again."}), 400
-        frame = latest.raw()
-        if frame is None:
-            return jsonify({"error": "No picture from that camera yet. "
-                                     "Wait a moment and try again."}), 400
+        if from_photo:
+            frame = _photo_upload()
+        else:
+            if cid is None:
+                return jsonify({"error": "Pick a camera to capture from."}), 400
+            cam_id = _int_arg(cid, -1, 0, 2**31 - 1)
+            latest = manager.latest(cam_id) if cam_id >= 0 else None
+            if latest is None:
+                return jsonify({"error": "That camera isn't running. Start monitoring "
+                                         "or check the camera, then try again."}), 400
+            frame = latest.raw()
+            if frame is None:
+                return jsonify({"error": "No picture from that camera yet. "
+                                         "Wait a moment and try again."}), 400
         face = models.face_engine.best_face(frame)
         if not face or face.get("embedding") is None:
-            return jsonify({"error": "No face in view. Ask the person to look "
+            return jsonify({"error": "No face in this photo. Choose one where the face "
+                                     "is clear and looking at the camera." if from_photo else
+                                     "No face in view. Ask the person to look "
                                      "straight at the camera."}), 400
         if not _face_ok(face):
-            return jsonify({"error": "The face is too small or blurry. Move closer "
+            return jsonify({"error": "The face in this photo is too small or blurry. "
+                                     "Choose a closer, sharper photo." if from_photo else
+                                     "The face is too small or blurry. Move closer "
                                      "and face the camera directly."}), 400
         info = person_store.add(
             name=name, category=category,
@@ -1219,24 +1313,15 @@ def create_app(*, db_path: str = "homeshield.db",
         person_store.delete(pid)
         return jsonify({"ok": True})
 
-    @app.route("/api/detect_face/<int:cid>")
-    @require_admin
-    def api_detect_face(cid: int):
-        latest = manager.latest(int(cid))
-        if latest is None:
-            return jsonify({"error": "no_frame"})
-        frame = latest.raw()
-        if frame is None:
-            return jsonify({"error": "no_frame"})
-        if not models.face_engine or not models.face_engine.available:
-            return jsonify({"error": "face_rec_disabled",
-                            "width": frame.shape[1],
-                            "height": frame.shape[0]})
-        face = models.face_engine.best_face(frame)
+    def _face_preview(frame) -> dict[str, Any]:
+        """The face the register preview outlines, in the picture's own pixels."""
         h, w = frame.shape[:2]
+        if not models.face_engine or not models.face_engine.available:
+            return {"error": "face_rec_disabled", "width": w, "height": h}
+        face = models.face_engine.best_face(frame)
         if not face:
-            return jsonify({"face": None, "width": w, "height": h})
-        return jsonify({
+            return {"face": None, "width": w, "height": h}
+        return {
             "face": {
                 "x": face["x"], "y": face["y"],
                 "w": face["w"], "h": face["h"],
@@ -1246,7 +1331,24 @@ def create_app(*, db_path: str = "homeshield.db",
                 "quality_ok": _face_ok(face),
             },
             "width": w, "height": h,
-        })
+        }
+
+    @app.route("/api/detect_face/<int:cid>")
+    @require_admin
+    def api_detect_face(cid: int):
+        latest = manager.latest(int(cid))
+        if latest is None:
+            return jsonify({"error": "no_frame"})
+        frame = latest.raw()
+        if frame is None:
+            return jsonify({"error": "no_frame"})
+        return jsonify(_face_preview(frame))
+
+    @app.route("/api/detect_face/photo", methods=["POST"])
+    @require_admin
+    def api_detect_face_photo():
+        _photo_form()
+        return jsonify(_face_preview(_photo_upload()))
 
     # ===== Intruders ====================================================
 
@@ -1276,10 +1378,12 @@ def create_app(*, db_path: str = "homeshield.db",
         if rec.get("embedding") is None:
             return jsonify({"error": "This record has no face data to "
                                      "register from."}), 400
+        # They keep the record's photo, and were last seen when and where it was.
         info = person_store.add(
             name=name, category=category,
             embedding=rec["embedding"],
-            frame_bgr=None, face_bbox=None,
+            photo_from=rec["photo_path"],
+            seen_at=rec["detected_ts"], seen_camera=rec["camera_name"],
         )
         intruder_store.delete(iid)
         return jsonify({"ok": True, **info})

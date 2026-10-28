@@ -170,6 +170,28 @@ def test_offline_boards_and_sensors_refuse_commands(hub):
     assert h.store.activity()[0]["text"] == f"{node} went offline"
 
 
+def test_a_speed_fan_takes_speeds_and_a_dimmer_remembers_its_level(hub):
+    h, link, _, _ = hub
+    node = adopted(h)
+    fan = h.map_pin(node, 25, "fan_pwm", "Ceiling fan", "", {}, "admin")
+    lamp = h.map_pin(node, 26, "dimmer", "Lamp", "", {}, "admin")
+    assert json.loads(link.last(f"homeshield/{node}/config"))["pins"][0] == {"pin": 25, "t": "pwm", "inv": 0}
+    h.set_device(fan["device_id"], 70, "admin")
+    assert link.last(f"homeshield/{node}/pin/25/set") == "70"
+    h.handle(f"homeshield/{node}/pin/25/state", "70")
+    assert h.store.activity()[0]["text"] == "Ceiling fan → Medium"
+    with pytest.raises(PinError, match="a speed from 0 to 100"):
+        h.set_device(fan["device_id"], 120, "admin")
+
+    def level(dev):
+        return next(d for d in h.devices_view()["devices"] if d["device_id"] == dev["device_id"])["level"]
+    assert level(lamp) == "100"                       # never on yet: its switch turns it on full
+    h.handle(f"homeshield/{node}/pin/26/state", "40")
+    h.handle(f"homeshield/{node}/pin/26/state", "0")
+    assert level(lamp) == "40"                        # off: its switch brings back 40 %
+    assert level(fan) == "70"
+
+
 def test_a_lock_that_relocks_itself_is_logged_as_auto_lock(hub):
     h, _, _, _ = hub
     node = adopted(h, "node-door", "Front Door")

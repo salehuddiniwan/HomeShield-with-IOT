@@ -1,7 +1,8 @@
 """Polygon zones per camera.
 
-* danger zones  - alert when a child enters
-* safe zones    - suppress lying / inactivity inside (e.g. a bed)
+* danger zones    - alert when a child enters
+* safe zones      - suppress lying / inactivity inside (e.g. a bed)
+* fireplace zones - ignore fire and smoke that stays inside (a fireplace, a stove)
 
 Polygons are stored as JSON [[x, y], ...] in the UI's 640x480 reference
 frame and scaled per-camera at runtime.
@@ -32,6 +33,37 @@ def point_in_polygon(px: float, py: float, polygon: list[list[float]]) -> bool:
             inside = not inside
         j = i
     return inside
+
+
+ZONE_TYPES = ("danger", "safe", "fireplace")
+
+# A flame or smoke box counts as "in the fireplace" when at least this share of it
+# lies inside the zone. A fire spreading out of the fireplace has a box reaching well
+# past the zone, drops below this, and alerts as usual.
+FIREPLACE_SHARE = 0.6
+
+
+def box_share_inside(bbox, polygon: list[list[float]], steps: int = 8) -> float:
+    """Roughly how much of the box (x1, y1, x2, y2) lies inside the polygon (0 to 1),
+    from a steps x steps grid of points across the box."""
+    x1, y1, x2, y2 = (float(v) for v in bbox[:4])
+    if x2 <= x1 or y2 <= y1 or len(polygon) < 3:
+        return 0.0
+    inside = 0
+    for i in range(steps):
+        for j in range(steps):
+            px = x1 + (i + 0.5) * (x2 - x1) / steps
+            py = y1 + (j + 0.5) * (y2 - y1) / steps
+            inside += point_in_polygon(px, py, polygon)
+    return inside / (steps * steps)
+
+
+def mark_fireplace_fires(fires: list[dict[str, Any]], zones: list[dict[str, Any]],
+                         share: float = FIREPLACE_SHARE) -> None:
+    """Set d["ignored"] on each fire / smoke detection that is mostly inside a
+    fireplace zone (zones carry "polygon_scaled" in frame pixels)."""
+    for d in fires:
+        d["ignored"] = any(box_share_inside(d["bbox"], z["polygon_scaled"]) >= share for z in zones)
 
 
 def scale_polygon(poly: list[list[float]], src_w: int, src_h: int,
@@ -84,7 +116,7 @@ class ZoneStore:
 
     def add(self, *, zone_name: str, camera_id: int,
             polygon: list[list[float]], zone_type: str = "danger") -> int:
-        zone_type = "safe" if zone_type == "safe" else "danger"
+        zone_type = zone_type if zone_type in ZONE_TYPES else "danger"
         with write_conn(self.db_path) as conn:
             cur = conn.execute(
                 """INSERT INTO zones (zone_name, camera_id, polygon_json, zone_type)
@@ -126,3 +158,7 @@ class ZoneStore:
     def danger_zones_for(self, camera_id: int, frame_w: int, frame_h: int
                          ) -> list[dict[str, Any]]:
         return self._scaled_zones(camera_id, frame_w, frame_h, "danger")
+
+    def fireplace_zones_for(self, camera_id: int, frame_w: int, frame_h: int
+                            ) -> list[dict[str, Any]]:
+        return self._scaled_zones(camera_id, frame_w, frame_h, "fireplace")

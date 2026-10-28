@@ -54,7 +54,7 @@ CAMERA_EVENTS = {"fall": "Fall detected", "fire": "Fire or smoke", "intruder": "
 HOMESHIELD_EVENTS = {"monitoring_started": "Monitoring is started",
                      "monitoring_stopped": "Monitoring is stopped",
                      "mode_away": "Switched to Away", "mode_home": "Switched to Home"}
-GROUPS = {"light": ("light", "dimmer"), "socket": ("socket",), "fan": ("fan",), "relay": ("relay",),
+GROUPS = {"light": ("light", "dimmer"), "socket": ("socket",), "fan": ("fan", "fan_pwm"), "relay": ("relay",),
           "lock": ("lock",), "valve": ("valve",),
           "all": tuple(k for k, v in KINDS.items() if v["type"] in ("out", "pwm"))}
 GROUP_NAMES = {"light": "every light", "socket": "every socket", "fan": "every fan",
@@ -146,10 +146,22 @@ class AutomationEngine:
                 city, (lat, lon) = DEFAULT_CITY, CITIES[DEFAULT_CITY]
         return {"city": city, "lat": lat, "lon": lon}
 
-    def set_location(self, city: Any, by: str) -> dict[str, Any]:
-        if city not in CITIES:
+    def set_location(self, city: Any, by: str, lat: Any = None, lon: Any = None) -> dict[str, Any]:
+        """A town from the list, or any place with its map position (Settings finds
+        those). It is also where the weather on the Live page is for."""
+        if lat is not None or lon is not None:
+            try:
+                lat, lon = float(lat), float(lon)
+            except (TypeError, ValueError):
+                raise PinError("That place has no map position.") from None
+            if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                raise PinError("That place has no map position.")
+            city = str(city or "").strip()[:60] or f"{lat:.2f}, {lon:.2f}"
+            self.settings.update({"sun_city": city, "sun_lat": round(lat, 4), "sun_lon": round(lon, 4)})
+        elif city in CITIES:
+            self.settings.update({"sun_city": city})
+        else:
             raise PinError("Pick a city from the list.")
-        self.settings.update({"sun_city": city})
         self.store.log(f"Sunrise and sunset now for {city}", by=by)
         self._changed()
         return self.sun_info()
@@ -894,6 +906,8 @@ class AutomationEngine:
                 title = f"{'Open' if v == '1' else 'Close'} {name}"
             elif dev["kind"] == "dimmer" and v not in ("0", "100"):
                 title = f"Set {name} to {v} %"
+            elif dev["kind"] == "fan_pwm" and v != "0":
+                title = f"Set {name} to {describe('fan_pwm', v).lower()}"
             else:
                 title = f"Turn {'off' if v == '0' else 'on'} {name}"
             return {"tag": "DEVICE", "title": title, "sub": self._where(dev)}

@@ -1,5 +1,9 @@
 """API validation: bad input is answered with a 400 and a readable message."""
 
+import io
+
+import cv2
+import numpy as np
 import pytest
 
 from homeshield.db import write_conn
@@ -76,6 +80,91 @@ def test_person_category_and_name_are_checked_before_capture(admin):
     assert r.status_code == 400 and "Category" in r.get_json()["error"]
     r = admin.post("/api/persons", json={"name": "n" * 61, "category": "adult", "camera_id": 1})
     assert r.status_code == 400 and "too long" in r.get_json()["error"]
+
+
+class _FakeFaces:
+    """Finds one face in the middle of any picture brighter than black."""
+    available = True
+
+    def best_face(self, frame):
+        h, w = frame.shape[:2]
+        if not frame.any():
+            return None
+        return {"x": w * 0.3, "y": h * 0.2, "w": w * 0.4, "h": h * 0.5, "age": 30,
+                "det_score": 0.9, "embedding": np.ones(512, np.float32) / np.sqrt(512)}
+
+
+def _photo(color=(180, 160, 140), size=(480, 640)):
+    ok, buf = cv2.imencode(".jpg", np.full((*size, 3), color, np.uint8))
+    assert ok
+    return io.BytesIO(buf.tobytes())
+
+
+def test_a_person_can_be_registered_from_a_photo(app, admin):
+    app.extensions["homeshield_manager"].models.face_engine = _FakeFaces()
+
+    r = admin.post("/api/detect_face/photo", data={"photo": (_photo(), "me.jpg")},
+                   content_type="multipart/form-data")
+    body = r.get_json()
+    assert r.status_code == 200 and body["face"]["quality_ok"] is True
+    assert (body["width"], body["height"]) == (640, 480)
+
+    r = admin.post("/api/persons", data={"name": "Aisyah", "category": "child",
+                                         "photo": (_photo(), "me.jpg")},
+                   content_type="multipart/form-data")
+    assert r.status_code == 200, r.get_json()
+    person = admin.get("/api/persons").get_json()["persons"][0]
+    assert (person["name"], person["category"]) == ("Aisyah", "child")
+    assert person["photo_url"] and person["last_seen_at"] is None
+    photo = admin.get(person["photo_url"])      # head and shoulders, 4:5
+    h, w = cv2.imdecode(np.frombuffer(photo.data, np.uint8), cv2.IMREAD_COLOR).shape[:2]
+    assert abs(w / h - 0.8) < 0.01
+
+
+def test_a_registered_intruder_keeps_its_photo_and_where_it_was_seen(app, admin):
+    intruders = app.extensions["homeshield_manager"].intruder_store
+    iid = intruders.add(embedding=np.ones(512, np.float32), camera_id=1, camera_name="Porch",
+                        frame_bgr=np.full((480, 640, 3), 120, np.uint8),
+                        face_bbox=(300, 150, 60, 70))
+    r = admin.post(f"/api/intruders/{iid}/register", json={"name": "Aiman", "category": "child"})
+    assert r.status_code == 200, r.get_json()
+    person = admin.get("/api/persons").get_json()["persons"][0]
+    assert person["photo_url"] and admin.get(person["photo_url"]).status_code == 200
+    assert person["last_seen_camera"] == "Porch" and person["last_seen_at"]
+    assert admin.get("/api/intruders").get_json() == []
+
+
+def test_a_photo_without_a_face_or_not_a_picture_is_refused(app, admin):
+    app.extensions["homeshield_manager"].models.face_engine = _FakeFaces()
+
+    def register(file, name="Aisyah"):
+        return admin.post("/api/persons", data={"name": name, "category": "adult", "photo": file},
+                          content_type="multipart/form-data")
+
+    r = register((_photo(color=(0, 0, 0)), "dark.jpg"))
+    assert r.status_code == 400 and "No face in this photo" in r.get_json()["error"]
+    r = register((io.BytesIO(b"not a picture"), "notes.jpg"))
+    assert r.status_code == 400 and "JPG or PNG" in r.get_json()["error"]
+    r = admin.post("/api/persons", data={"name": "Aisyah", "category": "adult"},
+                   content_type="multipart/form-data")
+    assert r.status_code == 400 and "Choose a photo" in r.get_json()["error"]
+    assert register((_photo(), "me.jpg"), name="").status_code == 400
+    assert admin.get("/api/persons").get_json()["persons"] == []
+
+
+def test_a_large_photo_is_shrunk_before_detection(app, admin):
+    seen = []
+
+    class Engine(_FakeFaces):
+        def best_face(self, frame):
+            seen.append(frame.shape[:2])
+            return super().best_face(frame)
+
+    app.extensions["homeshield_manager"].models.face_engine = Engine()
+    r = admin.post("/api/detect_face/photo", data={"photo": (_photo(size=(3000, 4000)), "big.jpg")},
+                   content_type="multipart/form-data")
+    assert r.status_code == 200
+    assert seen == [(1440, 1920)]
 
 
 def test_guest_may_fetch_still_frames(app, admin):

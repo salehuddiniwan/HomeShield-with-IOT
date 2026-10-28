@@ -6,8 +6,10 @@ detection loop can match without hitting SQLite per frame.
 
 from __future__ import annotations
 
+import shutil
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -27,30 +29,60 @@ def blob_to_emb(blob: Optional[bytes]) -> Optional[np.ndarray]:
     return np.frombuffer(blob, dtype=np.float32) if blob else None
 
 
-def save_face_thumbnail(frame_bgr, bbox, out_path: Path, side: int = 240) -> bool:
-    """Crop face with 25% padding and resize so the longest side == ``side``."""
-    x, y, w, h = bbox
+def save_portrait(frame_bgr, bbox, out_path: Path, width: int = 400) -> bool:
+    """Head and shoulders around a face: a 4:5 portrait at most ``width`` wide.
+
+    The box is 3.2 face-heights tall with the face a third of the way down. A
+    box bigger than the picture shrinks to fit, and one past an edge slides back
+    in, so a face near the edge sits off-centre rather than beside a blank strip.
+    """
+    x, y, w, h = (float(v) for v in bbox)
     H, W = frame_bgr.shape[:2]
-    px, py = w * 0.25, h * 0.25
-    x1, y1 = max(0, int(x - px)), max(0, int(y - py))
-    x2, y2 = min(W, int(x + w + px)), min(H, int(y + h + py))
-    if x2 <= x1 or y2 <= y1:
+    if w <= 0 or h <= 0:
         return False
-    crop = frame_bgr[y1:y2, x1:x2]
+    bh = 3.2 * h
+    bw = bh * 0.8
+    k = min(1.0, W / bw, H / bh)
+    bw, bh = bw * k, bh * k
+    x1 = min(max(x + w / 2 - bw / 2, 0.0), W - bw)
+    y1 = min(max(y + h / 2 - 0.34 * bh, 0.0), H - bh)
+    crop = frame_bgr[round(y1):round(y1 + bh), round(x1):round(x1 + bw)]
     if crop.size == 0:
         return False
     h_c, w_c = crop.shape[:2]
-    scale = side / max(h_c, w_c)
-    resized = cv2.resize(crop, (int(w_c * scale), int(h_c * scale)),
-                         interpolation=cv2.INTER_AREA)
+    scale = min(1.0, width / w_c)
+    if scale < 1.0:
+        crop = cv2.resize(crop, (max(1, round(w_c * scale)), max(1, round(h_c * scale))),
+                          interpolation=cv2.INTER_AREA)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    return bool(cv2.imwrite(str(out_path), resized))
+    return bool(cv2.imwrite(str(out_path), crop, [cv2.IMWRITE_JPEG_QUALITY, 90]))
 
 
 def _maybe_save_thumb(frame_bgr, face_bbox, photo_path: Path) -> bool:
     if frame_bgr is None or face_bbox is None:
         return False
-    return save_face_thumbnail(frame_bgr, face_bbox, photo_path)
+    return save_portrait(frame_bgr, face_bbox, photo_path)
+
+
+def _copy_photo(src: Optional[str], dest: Path) -> bool:
+    """A photo another record already has (an intruder's, when they're registered)."""
+    if not src or not Path(src).is_file():
+        return False
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        return True
+    except OSError:
+        return False
+
+
+def _utc_text_ts(text: Optional[str]) -> Optional[float]:
+    """SQLite's datetime('now') text, which is UTC, as epoch seconds."""
+    try:
+        return datetime.strptime(text, "%Y-%m-%d %H:%M:%S").replace(
+            tzinfo=timezone.utc).timestamp()
+    except (TypeError, ValueError):
+        return None
 
 
 def _unlink_quietly(p: Optional[str]) -> None:
@@ -64,9 +96,10 @@ def _unlink_quietly(p: Optional[str]) -> None:
 # ---- PersonStore ----------------------------------------------------------
 
 class PersonStore:
-    """Registered known faces."""
+    """Registered known faces, and when a camera last recognised each one."""
 
     _CATEGORIES = ("adult", "child", "elderly")
+    SEEN_SAVE_S = 60.0           # a sighting is written to the database at most this often
 
     def __init__(self, db_path: str, photos_dir: Path):
         self.db_path = db_path
@@ -75,16 +108,20 @@ class PersonStore:
         self._lock = threading.Lock()
         self._gallery: list[tuple[int, np.ndarray]] = []
         self._meta: dict[int, dict[str, Any]] = {}
+        # person_id -> (at, camera name). Kept apart from _meta so a reload
+        # doesn't roll back a sighting the database hasn't been given yet.
+        self._seen: dict[int, tuple[float, Optional[str]]] = {}
+        self._seen_saved: dict[int, float] = {}
         self.reload()
 
     def reload(self) -> None:
         with read_conn(self.db_path) as conn:
             rows = conn.execute(
                 "SELECT person_id, name, category, photo_path, "
-                "embedding_blob, created_at "
+                "embedding_blob, created_at, last_seen_at, last_seen_camera "
                 "FROM persons ORDER BY person_id ASC"
             ).fetchall()
-        gallery, meta = [], {}
+        gallery, meta, stored = [], {}, {}
         for r in rows:
             pid = int(r["person_id"])
             emb = blob_to_emb(r["embedding_blob"])
@@ -97,13 +134,22 @@ class PersonStore:
                 "photo_path": r["photo_path"],
                 "created_at": r["created_at"],
             }
+            if r["last_seen_at"] is not None:
+                stored[pid] = (float(r["last_seen_at"]), r["last_seen_camera"])
         with self._lock:
             self._gallery = gallery
             self._meta = meta
+            for pid, seen in stored.items():
+                if pid not in self._seen or seen[0] > self._seen[pid][0]:
+                    self._seen[pid] = seen
+            for pid in [p for p in self._seen if p not in meta]:
+                del self._seen[pid]
+                self._seen_saved.pop(pid, None)
 
     def list(self) -> list[dict[str, Any]]:
         with self._lock:
             persons = list(self._meta.values())
+            seen = dict(self._seen)
         return [{
             "person_id": p["person_id"],
             "name": p["name"],
@@ -111,7 +157,26 @@ class PersonStore:
             "photo_url": (f"/person_photos/{Path(p['photo_path']).name}"
                           if p["photo_path"] else None),
             "created_at": p["created_at"],
+            "last_seen_at": seen.get(p["person_id"], (None, None))[0],
+            "last_seen_camera": seen.get(p["person_id"], (None, None))[1],
         } for p in persons]
+
+    def mark_seen(self, person_id: int, camera_name: Optional[str],
+                  at: Optional[float] = None) -> None:
+        """A camera recognised this face. Called for every match, so it only
+        writes to the database once a minute per person; the list always has
+        the latest."""
+        pid, at = int(person_id), time.time() if at is None else float(at)
+        with self._lock:
+            if pid not in self._meta:
+                return
+            self._seen[pid] = (at, camera_name)
+            if at - self._seen_saved.get(pid, float("-inf")) < self.SEEN_SAVE_S:
+                return
+            self._seen_saved[pid] = at
+        with write_conn(self.db_path) as conn:
+            conn.execute("UPDATE persons SET last_seen_at = ?, last_seen_camera = ? "
+                         "WHERE person_id = ?", (at, camera_name, pid))
 
     def gallery(self) -> list[tuple[int, np.ndarray]]:
         with self._lock:
@@ -128,18 +193,25 @@ class PersonStore:
         return m["category"] if m else None
 
     def add(self, *, name: str, category: str, embedding: np.ndarray,
-            frame_bgr=None, face_bbox=None) -> dict[str, Any]:
+            frame_bgr=None, face_bbox=None, photo_from: Optional[str] = None,
+            seen_at: Optional[float] = None,
+            seen_camera: Optional[str] = None) -> dict[str, Any]:
+        """``photo_from`` and ``seen_*``: someone registered from an intruder
+        record keeps its photo, and was last seen when and where it was."""
         cat = category if category in self._CATEGORIES else "adult"
         photo_rel = f"person_{int(time.time() * 1000)}.jpg"
         photo_path = self.photos_dir / photo_rel
-        ok = _maybe_save_thumb(frame_bgr, face_bbox, photo_path)
+        ok = (_maybe_save_thumb(frame_bgr, face_bbox, photo_path)
+              or _copy_photo(photo_from, photo_path))
         with write_conn(self.db_path) as conn:
             cur = conn.execute(
-                """INSERT INTO persons (name, category, photo_path, embedding_blob)
-                   VALUES (?, ?, ?, ?)""",
+                """INSERT INTO persons (name, category, photo_path, embedding_blob,
+                                        last_seen_at, last_seen_camera)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
                 (name.strip(), cat,
                  str(photo_path) if ok else None,
-                 emb_to_blob(embedding)),
+                 emb_to_blob(embedding),
+                 seen_at, seen_camera if seen_at is not None else None),
             )
             pid = cur.lastrowid
         self.reload()
@@ -241,5 +313,6 @@ class IntruderStore:
             "camera_id": r["camera_id"],
             "camera_name": r["camera_name"],
             "detected_at": r["detected_at"],
+            "detected_ts": _utc_text_ts(r["detected_at"]),
             "dismissed": bool(r["dismissed"]),
         }

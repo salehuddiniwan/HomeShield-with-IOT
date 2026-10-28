@@ -38,14 +38,15 @@ The only home CCTV dashboard that runs three production-quality anomaly detector
 - Fall detection: 7-state FSM on YOLO pose keypoints; configurable sensitivity, inactivity timeout, and safe/danger zones
 - Fire & smoke: custom YOLO weights, per-class cooldown, confirmation over a sliding window to reject one-frame false positives
 - Face/intruder: InsightFace ArcFace (buffalo_l) 512-dim embeddings, cosine-matched against a registered Persons gallery; unknown faces auto-logged as intruders
+- Weather (Live page): the outdoor weather, next six hours, visibility, haze and air quality for the home location, from Open-Meteo (free, no account). Only the location's coordinates leave the home; the last answer is kept when the internet drops, and sunrise and sunset are worked out locally. Admins set the location in Settings > Location (any town), which also sets sunrise and sunset for automations
 - Who's online: admins see in the sidebar which accounts are using the dashboard now (devices, background tab, via the internet) and when each was last seen; also in Settings > Users
 - Incident clips: an H.264 video of each incident, from a few seconds before the first detection to a few seconds after the last, played in the incident window and downloadable; kept for a set number of days
 - Alarm buzzer (IoT): an ESP32 DevKit (CP2102 USB, or Wi-Fi) sounds a pattern per incident kind until the incident is handled, someone presses Silence (dashboard or the board's BOOT button), or a time limit; firmware in `firmware/HomeShieldBuzzer`
 - SOS button (IoT): a push button on the same ESP32; a press opens a critical "SOS: help requested" incident named after the board (WhatsApp alert, SOS in Morse code on every buzzer), and the board sounds it locally even when HomeShield is unreachable
 
-**Zones:** polygon safe zones (suppress lying/inactivity alerts on beds/sofas) and danger zones (child-entry alerts for kitchens, balconies, stairs)
+**Zones:** polygon safe zones (suppress lying/inactivity alerts on beds/sofas), danger zones (child-entry alerts for kitchens, balconies, stairs) and fireplace zones (fire and smoke at least 60% inside are ignored, so a fireplace or stove doesn't alarm, while a fire spreading out of it still does; ignored flames stay on the video, grey)
 
-**Performance:** per-camera worker threads on one GPU; each camera runs its own copy of the small pose model (so cameras don't queue for it, about 20 MB of GPU memory each) and shares the fire and face models. Async face inference, lazy JPEG encoding, and non-blocking event publishing keep the capture loop from stalling on I/O
+**Performance:** per-camera worker threads on one GPU; each camera runs its own copy of the small pose model (so cameras don't queue for it, about 20 MB of GPU memory each) and shares the fire and face models. Async face inference, lazy JPEG encoding, and non-blocking event publishing keep the capture loop from stalling on I/O. By default each camera is analysed at 10 frames a second, each viewer is sent 10 frames a second at 960 px wide, and network streams are decoded on the GPU; on a 1080p 30 FPS camera that measured about a third of the CPU of analysing and streaming every frame
 
 **Platform constraints:** Windows-primary (bundled InsightFace wheel for CPython 3.11 x64); face detection on CPU is unusable in practice and should be disabled on CPU-only setups
 
@@ -58,7 +59,7 @@ The only home CCTV dashboard that runs three production-quality anomaly detector
 ## Brand Commitments
 
 - Product name: **HomeShield** (this edition: **HomeShield IoT**)
-- Logo: amber block mark (an upright bar with an arm, and three rounded squares stepping out like an arrow), in `homeshield/static/logo.svg` and drawn inline in the page
+- Logo: a white block mark (an upright bar with an arm, and three rounded squares stepping out like an arrow) on a royal-blue (#2d68fe) rounded tile, in `homeshield/static/logo.svg` and drawn inline in the page
 - Companion icons (Detection, Fall, Fire, Face, Camera, Register, Notification) drawn inline in the page; the source SVGs are kept outside the project in `../FYPsem2/report_material/Icon/`
 - No locked color palette, typography, or visual style — all open for design decisions
 

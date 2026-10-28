@@ -100,6 +100,7 @@ class AlarmController:
         self._clock = clock
         self._lock = threading.Lock()
         self._ringing: dict[Hashable, str] = {}      # incident id, or ("sensor", id) -> kind
+        self._closed: dict[Hashable, str] = {}       # incidents closed while sounding, for an undo
         self._since: Optional[float] = None
         self._test_until = 0.0
         # Starts from the clock, so a board that silenced seq N before a
@@ -215,15 +216,27 @@ class AlarmController:
         if iid is None or kind not in PATTERNS:
             return
         if inc.get("headline_type") in SENSOR_EVENTS and change != "resolved":
-            return                      # the sensor's rule decides (ring / unring)
+            return                      # the sensor's rule decides (ring / unring, and reopen)
         now = self._clock()
         with self._lock:
             if change == "resolved":
-                if self._ringing.pop(iid, None) is None:
+                was = self._ringing.pop(iid, None)
+                if was is None:
                     return
+                self._closed[iid] = was
+                while len(self._closed) > 50:
+                    self._closed.pop(next(iter(self._closed)))
                 if not self._ringing:
                     self._since = None
                     self._silenced = {"by": inc.get("resolved_by") or "someone", "at": now}
+            elif change == "reopened":
+                # Someone undid closing it: it sounds again if closing it had stopped it.
+                was = self._closed.pop(iid, None)
+                if was is None or not self.enabled():
+                    return
+                if not self._ringing:
+                    self._since = now
+                self._ringing[iid] = was
             elif change in ("opened", "escalated") or (change == "updated" and kind == "sos"):
                 # Repeat detections stay quiet, but every SOS press is a person
                 # asking again: it sounds even after someone silenced it.
@@ -268,6 +281,10 @@ class AlarmController:
             self._seq += 1
         self.notify()
         return True
+
+    def ring_kind(self, key: Hashable) -> Optional[str]:
+        with self._lock:
+            return self._ringing.get(key)
 
     def ringing(self, key: Hashable) -> bool:
         with self._lock:

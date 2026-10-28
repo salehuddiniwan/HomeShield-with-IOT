@@ -107,6 +107,8 @@ def test_sun_times_for_kuala_lumpur():
         assert 11.8 < length < 12.4                    # near the equator: about 12 h
         utc = dt.datetime.fromtimestamp(set_, dt.timezone.utc)
         assert 10 * 60 + 50 <= utc.hour * 60 + utc.minute <= 11 * 60 + 40   # 18:50-19:40 in Malaysia
+        myt = dt.timezone(dt.timedelta(hours=8))
+        assert dt.datetime.fromtimestamp(rise, myt).date() == dt.date(2026, month, 15)   # that day's, not the next
     assert sun_times(dt.date(2026, 6, 21), 80.0, 0.0) == (None, None)    # midnight sun
 
 

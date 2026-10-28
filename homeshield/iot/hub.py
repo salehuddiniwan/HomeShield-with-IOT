@@ -89,6 +89,8 @@ class IotHub:
         self._live: dict[str, dict[str, Any]] = {}       # node -> online, since, info, config_v
         self._found: dict[str, dict[str, Any]] = {}      # esp32-xxxx -> info, seen
         self._pending: dict[tuple[str, int], dict[str, Any]] = {}
+        # A dimmer's or speed fan's last level above 0, so its switch turns it back on there.
+        self._levels: dict[int, str] = {}
         self._alarm_line: Optional[str] = None
         self._listeners: list[Callable[[str], None]] = []
         self._stop = threading.Event()
@@ -259,6 +261,9 @@ class IotHub:
             return
         changed = dev["state"] != value
         self.store.set_state(dev["device_id"], value)
+        if KINDS.get(dev["kind"], {}).get("type") == "pwm" and value not in ("0", ""):
+            with self._lock:
+                self._levels[dev["device_id"]] = value
         with self._lock:
             pending = self._pending.get((node, pin))
             confirmed = pending is not None and pending["value"] == value
@@ -526,6 +531,11 @@ class IotHub:
                "kind_label": kind.get("label", d["kind"]),
                "online": self.node_online(d["node_id"]),
                "pending": pending["value"] if pending else None}
+        if kind.get("type") == "pwm":
+            # Where its switch turns it on: as it is now, else as it last was, else full.
+            on = d["state"] not in (None, "", "0")
+            with self._lock:
+                out["level"] = d["state"] if on else self._levels.get(d["device_id"], "100")
         if self.sensors is not None:
             out["reading"] = self.sensors.reading(d)
         return out

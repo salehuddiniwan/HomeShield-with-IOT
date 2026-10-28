@@ -16,5 +16,5 @@ def test_defaults_and_persistence(tmp_path):
 def test_legacy_process_fps_is_migrated(tmp_path):
     db = str(tmp_path / "t.db")
     init_db(db)
-    SettingsStore(db).update({"process_fps": 15})
+    SettingsStore(db).update({"process_fps": 15, "migrations_done": []})   # an install from before
     assert SettingsStore(db).get("process_fps") == 0

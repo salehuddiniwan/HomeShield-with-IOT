@@ -27,8 +27,9 @@ DEFAULT_CITY = "Kuala Lumpur"
 def sun_times(day: dt.date, lat: float, lon: float) -> tuple[Optional[float], Optional[float]]:
     """(sunrise, sunset) on `day` as Unix timestamps; None where the sun
     doesn't rise or set that day (polar regions)."""
-    noon = dt.datetime(day.year, day.month, day.day, 12, tzinfo=dt.timezone.utc)
-    jd = noon.timestamp() / 86400 + 2440587.5
+    # The day count wants the date at 0h UT: from noon it lands on the next day.
+    midnight = dt.datetime(day.year, day.month, day.day, tzinfo=dt.timezone.utc)
+    jd = midnight.timestamp() / 86400 + 2440587.5
     n = math.ceil(jd - 2451545.0 + 0.0008)
     j_star = n - lon / 360.0
     m = math.radians((357.5291 + 0.98560028 * j_star) % 360)

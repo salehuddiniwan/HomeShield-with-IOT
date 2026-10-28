@@ -30,7 +30,7 @@ from .detectors import fire
 from .detectors.face import FaceEngine, best_match, is_good_face
 from .detectors.fall import Config, MultiPersonState, State
 from .events import Event
-from .zones import point_in_polygon, scale_polygon
+from .zones import point_in_polygon, scale_polygon, mark_fireplace_fires
 
 log = logging.getLogger(__name__)
 
@@ -227,6 +227,7 @@ class FrameResult:
     intruder_alert: bool = False
     danger_zones: list[dict[str, Any]] = field(default_factory=list)
     safe_zones: list[dict[str, Any]] = field(default_factory=list)
+    fireplace_zones: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _bbox4(b) -> Optional[tuple[float, float, float, float]]:
@@ -351,6 +352,7 @@ class FaceWorker(threading.Thread):
             match_threshold = float(self.settings.get("face_match_threshold", 0.45))
             min_size = float(self.settings.get("face_min_size", 40))
             min_score = float(self.settings.get("face_min_det_score", 0.6))
+            seen = set()
             for f in faces:
                 f["match_id"] = f["match_name"] = f["match_category"] = None
                 f["match_score"] = 0.0
@@ -364,6 +366,13 @@ class FaceWorker(threading.Thread):
                 if pid is not None:
                     f["match_name"] = self.person_store.name_of(pid)
                     f["match_category"] = self.person_store.category_of(pid)
+                    seen.add(pid)
+            # "Seen 5 min ago at Living room" on the person's card
+            for pid in seen:
+                try:
+                    self.person_store.mark_seen(pid, self.camera_name)
+                except Exception as e:
+                    log.warning("face-worker cam=%s last seen: %s", self.camera_id, e)
 
             unknown = [f for f in faces if f["quality_ok"] and f["match_id"] is None]
             self._unknown_streak = self._unknown_streak + 1 if unknown else 0
@@ -495,9 +504,10 @@ class CameraPipeline:
         # Suppress the red ALERT-FALL banner when fall detection is disabled,
         # even if the underlying FSM state still says FALL_DETECTED.
         if self.settings.get("fall_enabled", True):
+            in_safe = {p["id"] for p in res.persons if p.get("in_safe")}
             res.fall_alert_ids = [
                 pid for pid, det in self.fall_state.detectors.items()
-                if det.fall_alert
+                if det.fall_alert and pid not in in_safe
             ]
         else:
             res.fall_alert_ids = []
@@ -573,6 +583,7 @@ class CameraPipeline:
         if self.zone_store is None:
             return
         res.danger_zones = self.zone_store.danger_zones_for(self.camera_id, W, H)
+        res.fireplace_zones = self.zone_store.fireplace_zones_for(self.camera_id, W, H)
         for sz in self.zone_store.for_camera(self.camera_id):
             if sz["zone_type"] == "safe":
                 res.safe_zones.append({
@@ -599,6 +610,7 @@ class CameraPipeline:
 
             in_safe = any(point_in_polygon(foot[0], foot[1], z["polygon_scaled"])
                           for z in res.safe_zones)
+            p["in_safe"] = in_safe          # the overlay marks a fall here "ignored"
             cat = p.get("category") or "unknown"
             who = f"Person #{pid}" + (f" ({p['name']})" if p.get("name") else "")
 
@@ -682,9 +694,12 @@ class CameraPipeline:
             for c in str(self.settings.get("fire_classes", "fire,smoke")).split(",")
             if c.strip()
         }
+        # Fire and smoke that stays in a fireplace zone is expected: it is drawn, marked
+        # "ignored", and never counts towards an alert.
+        mark_fireplace_fires(res.fires, res.fireplace_zones)
         per_cls_best: dict[str, tuple[float, tuple]] = {}
         for d in res.fires:
-            if d["cls_name"] not in alert_classes:
+            if d["cls_name"] not in alert_classes or d.get("ignored"):
                 continue
             best = per_cls_best.get(d["cls_name"])
             if best is None or d["conf"] > best[0]:

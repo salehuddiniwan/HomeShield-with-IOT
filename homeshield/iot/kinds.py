@@ -4,7 +4,7 @@ A device has a kind (what it is to people: a light, a door lock, a gas
 sensor) and the kind has a pin type (what the firmware does with the pin):
 
     out     relay or transistor, on/off             light, socket, fan, lock, valve, relay
-    pwm     0-100 % duty cycle                      dimmer
+    pwm     0-100 % duty cycle                      dimmer, fan with speed control
     buzzer  plays HomeShield's alarm patterns       buzzer
     in      digital input, reported on change       sos, motion, flame, water
     adc     analog input in millivolts, every N s   gas (MQ-2 or MQ-5); firmware 1.0-1.1 sent 0-4095
@@ -29,6 +29,8 @@ KINDS: dict[str, dict[str, Any]] = {
     "lock":    {"label": "Door lock", "type": "out", "options": {"inv": True, "auto_off": 60}},
     "valve":   {"label": "Valve", "type": "out", "options": {"inv": True}},
     "dimmer":  {"label": "Dimmable light", "type": "pwm", "options": {"inv": False}},
+    # A DC fan through a MOSFET or PWM fan driver: a relay can only switch a fan on or off.
+    "fan_pwm": {"label": "Fan with speed control", "type": "pwm", "options": {"inv": False}},
     "buzzer":  {"label": "Alarm buzzer", "type": "buzzer",
                 "options": {"inv": True, "passive": True, "hz": 2700}},
     "sos":     {"label": "SOS button", "type": "in",
@@ -42,6 +44,10 @@ KINDS: dict[str, dict[str, Any]] = {
 }
 OUTPUT_KINDS = frozenset(k for k, v in KINDS.items() if v["type"] in ("out", "pwm", "buzzer"))
 SWITCH_KINDS = frozenset(k for k, v in KINDS.items() if v["type"] == "out")
+
+# A speed fan's three speeds, as duty cycles. Below about 40 % a small DC fan may
+# not start turning.
+FAN_SPEEDS = {"40": "Low", "70": "Medium", "100": "High"}
 
 # Which "model" options a kind takes: the DHT type, or the MQ gas sensor.
 MODELS = {"climate": ("dht11", "dht22"), "gas": ("mq2", "mq5")}
@@ -205,7 +211,9 @@ def describe(kind: str, value: Any) -> str:
             return "Open" if on else "Closed"
         return "On" if on else "Off"
     if t == "pwm":
-        return "Off" if text in ("0", "") else f"{text} %"
+        if text in ("0", ""):
+            return "Off"
+        return FAN_SPEEDS.get(text, f"{text} %") if kind == "fan_pwm" else f"{text} %"
     if t == "buzzer":
         return {"test": "Test", "stop": "Stopped"}.get(text, text)
     return text
@@ -229,12 +237,13 @@ def normalise_value(kind: str, value: Any) -> str:
             return "100"
         if text in ("off",):
             return "0"
+        what = "a speed" if kind == "fan_pwm" else "a brightness"
         try:
             n = int(round(float(text)))
         except ValueError:
-            raise PinError("Set a brightness from 0 to 100.") from None
+            raise PinError(f"Set {what} from 0 to 100.") from None
         if not 0 <= n <= 100:
-            raise PinError("Set a brightness from 0 to 100.")
+            raise PinError(f"Set {what} from 0 to 100.")
         return str(n)
     if t == "buzzer":
         if text in ("test", "on", "1"):

@@ -122,6 +122,19 @@ def test_stats_count_false_alarms_per_detector_and_camera(bus, db):
     fire = next(k for k in stats["by_kind"] if k["key"] == "fire")
     assert (fire["total"], fire["false_alarm"], fire["open"]) == (2, 1, 1)
     assert {c["key"] for c in stats["by_camera"]} == {"Cam 1", "Cam 2"}
+    assert next(t for t in stats["by_type"] if t["key"] == "fire_detected")["total"] == 2
+
+
+def test_stats_tell_unknown_faces_from_motion_within_the_intruder_kind(bus, db):
+    store = IncidentStore(db)
+    now = time.time()
+    emit(bus, "intruder_detected", now - 100, cam=1)
+    emit(bus, "motion_detected", now - 100, cam=2)
+    emit(bus, "motion_detected", now - 50, cam=3)
+    stats = store.stats(days=7)
+    assert next(k for k in stats["by_kind"] if k["key"] == "intruder")["total"] == 3
+    by_type = {t["key"]: t["total"] for t in stats["by_type"]}
+    assert (by_type["intruder_detected"], by_type["motion_detected"]) == (1, 2)
 
 
 def test_backfill_groups_old_events_and_closes_stale_ones(db):
@@ -256,6 +269,31 @@ def test_resolve_api_validates_and_records_the_user(app):
     assert guest.post("/api/events/clear").status_code == 403          # clearing stays admin-only
     detail = guest.get(f"/api/incidents/{ev.incident_id}").get_json()
     assert len(detail["events"]) == 1
+
+
+def test_an_old_open_incident_lists_only_what_was_done_while_it_lasted(app):
+    from homeshield.iot.store import IotStore
+    bus = EventBus(db_path=app.config["DB"])
+    now = time.time()
+    ev = emit(bus, "fire_detected", now - 7200, cam=1)            # two hours ago, still open
+    store = IotStore(app.config["DB"])
+    store.add_run(1, ts=now - 7190, cause="fire", summary="", ok=True, steps=["Hall lights on"], camera_id=1)
+    store.add_run(1, ts=now - 60, cause="fire", summary="", ok=True, steps=["Hall lights on again"], camera_id=1)
+    admin = _login(app, "admin", "admin")
+    detail = admin.get(f"/api/incidents/{ev.incident_id}").get_json()
+    assert detail["status"] == "open"
+    assert [a["steps"] for a in detail["actions"]] == [["Hall lights on"]]
+
+
+def test_only_the_closer_can_undo_and_only_just_after(db):
+    store = IncidentStore(db)
+    bus = EventBus(db_path=db)
+    ev = emit(bus, "fall_detected", time.time())
+    store.resolve(ev.incident_id, outcome="false_alarm", by="sam", note="cat")
+    assert store.reopen(ev.incident_id, by="nadia") is None
+    assert store.reopen(ev.incident_id, by="sam", within_s=-1) is None      # too late
+    inc = store.reopen(ev.incident_id, by="sam")
+    assert (inc["status"], inc["resolved_by"], inc["note"]) == ("open", None, None)
 
 
 def test_notify_test_explains_missing_setup(app, monkeypatch):

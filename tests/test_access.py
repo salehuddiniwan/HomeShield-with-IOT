@@ -17,10 +17,12 @@ PUBLIC = {"/", "/api/login", "/api/logout", "/api/password_reset_request",
 STREAMS = {"/events_stream", "/video_feed/<int:cid>"}   # never read to the end here
 ADMIN_ONLY = {
     ("POST", "/api/cameras"), ("DELETE", "/api/cameras/<int:cid>"),
-    ("GET", "/api/detect_face/<int:cid>"), ("POST", "/api/events/clear"),
+    ("GET", "/api/detect_face/<int:cid>"), ("POST", "/api/detect_face/photo"),
+    ("POST", "/api/events/clear"),
     ("GET", "/api/intruders"), ("DELETE", "/api/intruders/<int:iid>"),
     ("POST", "/api/intruders/<int:iid>/dismiss"), ("POST", "/api/intruders/<int:iid>/register"),
     ("GET", "/api/models"), ("GET", "/api/notify/status"), ("POST", "/api/notify/test"),
+    ("GET", "/api/weather/places"),
     ("GET", "/api/persons"), ("POST", "/api/persons"), ("DELETE", "/api/persons/<int:pid>"),
     ("GET", "/api/settings"), ("POST", "/api/settings"),
     ("POST", "/api/system/start"), ("POST", "/api/system/stop"),

@@ -62,7 +62,9 @@ CREATE TABLE IF NOT EXISTS persons (
     category       TEXT    NOT NULL DEFAULT 'adult',
     photo_path     TEXT,
     embedding_blob BLOB,
-    created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+    created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+    last_seen_at     REAL,       -- when a camera last recognised the face
+    last_seen_camera TEXT        -- and which camera
 );
 CREATE INDEX IF NOT EXISTS idx_persons_name ON persons (name);
 
@@ -240,6 +242,10 @@ def _migrate(conn: sqlite3.Connection) -> None:
                       ("changed_by", "TEXT"), ("changed_at", "REAL")):
         if col not in rcols:
             conn.execute(f"ALTER TABLE rules ADD COLUMN {col} {kind}")
+    pcols = {r[1] for r in conn.execute("PRAGMA table_info(persons)")}
+    for col, kind in (("last_seen_at", "REAL"), ("last_seen_camera", "TEXT")):
+        if col not in pcols:
+            conn.execute(f"ALTER TABLE persons ADD COLUMN {col} {kind}")
     runcols = {r[1] for r in conn.execute("PRAGMA table_info(rule_runs)")}
     for col in ("device_id", "camera_id", "incident_id"):
         if col not in runcols:

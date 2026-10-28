@@ -70,9 +70,11 @@ class _Engine:
 
 
 class _People:
+    def __init__(self): self.seen = []
     def gallery(self): return [(1, np.eye(512, dtype=np.float32)[0])]
     def name_of(self, pid): return "Alice"
     def category_of(self, pid): return "elderly"
+    def mark_seen(self, pid, camera_name): self.seen.append((pid, camera_name))
 
 
 class _Bus:
@@ -87,11 +89,11 @@ def _face(axis, **kw):
     return f
 
 
-def _run_worker(faces, cycles, **settings):
+def _run_worker(faces, cycles, people=None, **settings):
     bus = _Bus()
     w = FaceWorker(camera_id=1, camera_name="t", models=_models(face=_Engine(faces)),
                    settings={"intruder_confirm_frames": 2, **settings},
-                   person_store=_People(), intruder_store=None, bus=bus)
+                   person_store=people or _People(), intruder_store=None, bus=bus)
     w.start()
     states = []
     try:
@@ -114,9 +116,13 @@ def test_unknown_face_needs_two_cycles_before_intruder_alert():
 
 
 def test_known_face_is_named_and_never_an_intruder():
-    states, events, faces = _run_worker([_face(axis=0)], cycles=3)
+    people = _People()
+    states, events, faces = _run_worker([_face(axis=0), _face(axis=5)], cycles=3,
+                                        people=people, intruder_confirm_frames=9)
     assert not any(states) and not events
     assert faces[0]["match_name"] == "Alice"
+    # each match tells the card where they were seen; the unknown face doesn't
+    assert people.seen == [(1, "t")] * 3
 
 
 def test_small_or_unsure_faces_are_not_intruders():

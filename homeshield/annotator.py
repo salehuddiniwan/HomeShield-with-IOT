@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 from .detectors.fall.draw import STATE_COLOR, draw_skeleton
+from .detectors.fall.fsm import State
 
 # BGR colours
 COLOR_FIRE = (40, 60, 230)
@@ -13,10 +14,13 @@ COLOR_SMOKE = (200, 200, 200)
 COLOR_FACE_OK = (80, 220, 130)
 COLOR_FACE_BAD = (60, 60, 240)
 COLOR_FACE_UNSURE = (150, 150, 150)
-COLOR_BANNER_OK = (40, 130, 50)
-COLOR_BANNER_CRIT = (50, 50, 230)
 COLOR_DANGER_FILL = (50, 50, 230, 80)
 COLOR_SAFE_FILL = (90, 220, 130, 70)
+COLOR_FIREPLACE = (20, 140, 245)            # orange (BGR)
+COLOR_FIREPLACE_FILL = (20, 140, 245, 60)
+COLOR_IGNORED = (140, 140, 140)     # a flame in a fireplace zone, a fall in a safe zone
+# Person states that would raise an alert outside a safe zone.
+ALERT_STATES = {State.FALL_DETECTED, State.LYING_AFTER_FALL, State.LYING_MOTIONLESS, State.INACTIVITY}
 COLOR_TEXT_LIGHT = (235, 235, 235)
 COLOR_TEXT_DARK = (20, 20, 20)
 
@@ -77,9 +81,10 @@ def _draw_fires(frame, fires):
             continue
         x1, y1, x2, y2 = bb
         is_fire = d["cls_name"].lower() == "fire"
-        color = COLOR_FIRE if is_fire else COLOR_SMOKE
+        ignored = bool(d.get("ignored"))
+        color = COLOR_IGNORED if ignored else COLOR_FIRE if is_fire else COLOR_SMOKE
         _corner_box(frame, x1, y1, x2, y2, color, 2, 14)
-        _label(frame, f"{d['cls_name'].upper()} {d['conf']:.2f}",
+        _label(frame, f"{d['cls_name'].upper()} {d['conf']:.2f}" + (" ignored" if ignored else ""),
                int(x1), max(int(y1) - 2, 14),
                fg=COLOR_TEXT_LIGHT, bg=color, size=0.5, thick=1)
 
@@ -91,7 +96,9 @@ def _draw_persons(frame, persons, kp_conf_min):
             continue
         x1, y1, x2, y2 = (int(v) for v in bb)
         det = p["detector"]
-        color = STATE_COLOR.get(det.state, (200, 200, 200)) if det else (200, 200, 200)
+        # Lying or fallen inside a safe zone (a bed, a sofa) raises nothing: grey, "ignored".
+        ignored = bool(p.get("in_safe")) and det is not None and (det.fall_alert or det.state in ALERT_STATES)
+        color = (COLOR_IGNORED if ignored else STATE_COLOR.get(det.state, (200, 200, 200))) if det else (200, 200, 200)
         if p.get("kpts") is not None:
             try:
                 draw_skeleton(frame, p["kpts"], kp_conf_min)
@@ -101,8 +108,11 @@ def _draw_persons(frame, persons, kp_conf_min):
         pid = p.get("id", "?")
         who = f"#{pid} {p['name']}" if p.get("name") else f"#{pid}"
         state_label = det.state.value if det is not None else "?"
-        text = (f"{who} !! FALL !!" if det is not None and det.fall_alert
-                else f"{who} {state_label}")
+        if ignored:
+            text = f"{who} {'FALL' if det.fall_alert else state_label} ignored"
+        else:
+            text = (f"{who} !! FALL !!" if det is not None and det.fall_alert
+                    else f"{who} {state_label}")
         _label(frame, text, x1, max(y1 - 2, 14),
                fg=COLOR_TEXT_DARK, bg=color, size=0.5, thick=1)
 
@@ -126,26 +136,6 @@ def _draw_faces(frame, faces):
                fg=COLOR_TEXT_LIGHT, bg=color, size=0.45, thick=1)
 
 
-def _draw_banner(frame, result, camera_name):
-    H, W = frame.shape[:2]
-    crit = []
-    if result.fire_alert:
-        crit.append("FIRE")
-    if result.fall_alert_ids:
-        crit.append("FALL #" + ",".join(str(i) for i in result.fall_alert_ids))
-    if result.intruder_alert:
-        crit.append("INTRUDER")
-    if crit:
-        color = COLOR_BANNER_CRIT
-        text = " ALERT - " + "  &  ".join(crit) + " "
-    else:
-        color = COLOR_BANNER_OK
-        text = f" {camera_name}  -  {len(result.persons)} person(s) "
-    cv2.rectangle(frame, (0, 0), (W, 48), color, -1)
-    cv2.putText(frame, text, (12, 32),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.85, (240, 240, 240), 2, cv2.LINE_AA)
-
-
 def annotate(frame: np.ndarray, result, *,
              camera_name: str = "Camera",
              kp_conf_min: float = 0.30) -> np.ndarray:
@@ -158,10 +148,15 @@ def annotate(frame: np.ndarray, result, *,
                 edge=(60, 200, 130), fill=COLOR_SAFE_FILL,
                 badge_bg=(60, 180, 110), badge_fg=COLOR_TEXT_DARK,
                 badge_prefix="SAFE")
+    _draw_zones(frame, getattr(result, "fireplace_zones", []),
+                edge=COLOR_FIREPLACE, fill=COLOR_FIREPLACE_FILL,
+                badge_bg=COLOR_FIREPLACE, badge_fg=COLOR_TEXT_DARK,
+                badge_prefix="FIREPLACE")
     _draw_fires(frame, result.fires)
     _draw_persons(frame, result.persons, kp_conf_min)
     _draw_faces(frame, result.faces)
-    _draw_banner(frame, result, camera_name)
+    # No banner across the picture: the dashboard says what was detected, and each
+    # person, flame and face carries its own label.
     return frame
 
 

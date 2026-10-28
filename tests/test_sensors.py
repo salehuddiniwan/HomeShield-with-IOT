@@ -225,6 +225,19 @@ def test_closing_the_incident_elsewhere_acknowledges_the_alert(rig):
     assert rig.eng.alerts() == [] and rig.alarm.command().startswith("STOP")
 
 
+def test_undoing_an_acknowledged_alert_brings_it_and_its_buzzer_back(rig):
+    t = rig.clock.t
+    gas(rig, mv=CLEAN, at=t)
+    gas(rig, 2000, at=t + 1)
+    rig.h.tick(t + 12)
+    rig.eng.on_incident("opened", {"incident_id": 7, "device_id": rig.gas["device_id"]})
+    assert rig.alarm.command().startswith("ALARM")
+    assert rig.eng.acknowledge(rig.gas["device_id"], "mum") == 7
+    assert rig.eng.alerts() == [] and rig.alarm.command().startswith("STOP")
+    rig.eng.on_incident("reopened", {"incident_id": 7, "device_id": rig.gas["device_id"]})
+    assert len(rig.eng.alerts()) == 1 and rig.alarm.command().startswith("ALARM")
+
+
 def test_a_cold_mq2_is_ignored_while_it_warms_up(rig):
     t = rig.clock.t
     rig.h.handle(f"homeshield/{NODE}/info", json.dumps({"fw": "1.2", "up": 10}))

@@ -100,3 +100,43 @@ def test_latest_frame_reports_camera_size_not_placeholder_size():
     assert lf.size() == (1280, 720)
     lf.set(np.zeros((540, 960, 3), np.uint8))      # offline placeholder, no raw frame
     assert lf.size() == (1280, 720)
+
+
+def test_the_video_has_no_alert_banner():
+    from types import SimpleNamespace
+    from homeshield.annotator import annotate
+    for alert in (False, True):
+        res = SimpleNamespace(danger_zones=[], safe_zones=[], fires=[], persons=[], faces=[],
+                              fire_alert=alert, fall_alert_ids=[1] if alert else [], intruder_alert=alert)
+        frame = np.full((120, 160, 3), 90, np.uint8)
+        annotate(frame, res, camera_name="Cam1")
+        assert (frame == 90).all()                    # nothing across the top, calm or alarming
+
+
+def test_a_fall_in_a_safe_zone_is_drawn_ignored():
+    from types import SimpleNamespace
+    from homeshield.annotator import COLOR_IGNORED, annotate
+    from homeshield.detectors.fall.fsm import State
+    def frame_with(in_safe):
+        person = {"id": 1, "bbox": (30, 40, 120, 100), "kpts": None, "in_safe": in_safe,
+                  "detector": SimpleNamespace(state=State.FALL_DETECTED, fall_alert=True)}
+        res = SimpleNamespace(danger_zones=[], safe_zones=[], fires=[], persons=[person], faces=[],
+                              fire_alert=False, fall_alert_ids=[], intruder_alert=False)
+        f = np.full((120, 160, 3), 90, np.uint8)
+        return annotate(f, res, camera_name="Cam1")
+    grey = np.array(COLOR_IGNORED, np.uint8)
+    assert (frame_with(True) == grey).all(axis=2).any()        # grey box, "ignored"
+    assert not (frame_with(False) == grey).all(axis=2).any()   # outside: the usual red fall
+
+
+def test_a_fireplace_zone_and_an_ignored_flame_are_drawn():
+    from types import SimpleNamespace
+    from homeshield.annotator import COLOR_IGNORED, annotate
+    res = SimpleNamespace(danger_zones=[], safe_zones=[], persons=[], faces=[],
+                          fire_alert=False, fall_alert_ids=[], intruder_alert=False,
+                          fireplace_zones=[{"zone_name": "Hearth", "polygon_scaled": [[10, 30], [150, 30], [150, 110], [10, 110]]}],
+                          fires=[{"bbox": (40, 50, 90, 100), "conf": 0.9, "cls_name": "fire", "ignored": True}])
+    frame = np.full((120, 160, 3), 90, np.uint8)
+    annotate(frame, res, camera_name="Cam1")
+    assert (frame != 90).any()                                        # zone and flame drawn
+    assert (frame == np.array(COLOR_IGNORED, np.uint8)).all(axis=2).any()   # the flame in grey

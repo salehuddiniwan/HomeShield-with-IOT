@@ -9,7 +9,7 @@ import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import cv2
 import numpy as np
@@ -74,9 +74,10 @@ class LatestFrame:
     and label around the face) produced degraded enrolment embeddings.
     """
 
-    def __init__(self, jpeg_quality: int = 80):
+    def __init__(self, jpeg_quality: int = 80, max_width: Optional[Callable[[], int]] = None):
         self._cond = threading.Condition()
         self._quality = int(jpeg_quality)
+        self._max_width = max_width        # live view width cap (px; 0 = full size)
         self._display: Optional[np.ndarray] = None
         self._raw: Optional[np.ndarray] = None
         self._version = 0
@@ -107,6 +108,9 @@ class LatestFrame:
                 return self._jpeg, ver
         if img is None:
             return None, ver
+        mw = int(self._max_width() or 0) if self._max_width else 0
+        if mw and img.shape[1] > mw:           # smaller to send, to encode and to decode
+            img = cv2.resize(img, (mw, round(img.shape[0] * mw / img.shape[1])), interpolation=cv2.INTER_AREA)
         ok, buf = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), self._quality])
         jpeg = buf.tobytes() if ok else None
         with self._cond:
@@ -199,6 +203,7 @@ class WorkerStatus:
     last_error: Optional[str] = None
     camera_connected: bool = False
     fps: float = 0.0
+    hw_decode: bool = False      # this connection decodes on the graphics card
 
 
 def _strip_quotes(s: str) -> str:
@@ -233,6 +238,27 @@ def _is_file_source(src) -> bool:
     return isinstance(src, str) and Path(src).is_file()
 
 
+# A network camera that doesn't answer is given up on after this long, and retried
+# later. OpenCV opens one video source at a time, so its default of 30 s held every
+# other camera's connect or reconnect up behind one that was offline.
+OPEN_TIMEOUT_MS = 8000
+READ_TIMEOUT_MS = 10000      # a stream that stops sending: reconnect after this long
+
+
+def _is_network_source(src) -> bool:
+    return isinstance(src, str) and "://" in src and not _is_file_source(src)
+
+
+def _network_params() -> list[int]:
+    """FFmpeg timeouts for a network camera ([] on an OpenCV without them)."""
+    out: list[int] = []
+    for name, ms in (("CAP_PROP_OPEN_TIMEOUT_MSEC", OPEN_TIMEOUT_MS), ("CAP_PROP_READ_TIMEOUT_MSEC", READ_TIMEOUT_MS)):
+        prop = getattr(cv2, name, None)
+        if prop is not None:
+            out += [prop, ms]
+    return out
+
+
 class _PipelineFailed(Exception):
     """Too many consecutive pipeline errors: reconnect the camera."""
 
@@ -258,15 +284,46 @@ class CaptureWorker(threading.Thread):
         self._stop_flag = threading.Event()
         self._pipe_errors = 0
         self._last_ts = 0.0
+        self._hw_off = False         # the graphics card couldn't decode this camera: use the CPU
 
     def request_stop(self):
         self._stop_flag.set()
 
     # ---- camera open ----------------------------------------------------
 
+    def _open_hw(self, src):
+        """Network streams and files decoded on the graphics card (D3D11 on Windows),
+        about half the CPU per frame of decoding on the processor. None when the
+        video library or the card can't, and the caller opens it the usual way;
+        False when a network camera didn't answer at all, so there's no point in
+        waiting for it a second time."""
+        accel = getattr(cv2, "CAP_PROP_HW_ACCELERATION", None)
+        if (accel is None or isinstance(src, int) or self._hw_off
+                or not self.pipeline.settings.get("hw_decode", True)):
+            return None
+        network = _is_network_source(src)
+        try:
+            cap = cv2.VideoCapture(src, cv2.CAP_FFMPEG,
+                                   [accel, cv2.VIDEO_ACCELERATION_ANY] + (_network_params() if network else []))
+        except Exception as e:
+            log.info("camera %r: no hardware decoding (%s)", self.camera["name"], e)
+            return None
+        if cap.isOpened() and cap.get(accel) > 0:
+            return cap
+        opened = cap.isOpened()
+        cap.release()
+        return False if network and not opened else None
+
     def _open(self):
         src = _parse_source(self.camera["url"])
-        cap = cv2.VideoCapture(src)
+        cap = self._open_hw(src)
+        self.status.hw_decode = bool(cap)
+        if cap is False:
+            return None                  # the camera didn't answer: run() retries later
+        if cap is not None:
+            return cap
+        cap = (cv2.VideoCapture(src, cv2.CAP_FFMPEG, _network_params()) if _is_network_source(src)
+               else cv2.VideoCapture(src))
         if not cap.isOpened() and isinstance(src, int):
             # Windows webcam fallback. DirectShow only opens devices by index:
             # for a URL or file path it just prints "can't be used to capture
@@ -318,6 +375,7 @@ class CaptureWorker(threading.Thread):
             backoff = 1.0
             self._pipe_errors = 0
 
+            frames_before = self.status.frames_total
             try:
                 if is_file:
                     self._loop_file(cap)
@@ -328,6 +386,20 @@ class CaptureWorker(threading.Thread):
                 self._sys_event(f"Video processing stopped: {e}", 0.0)
             finally:
                 self.status.camera_connected = False
+                self._choose_decoder(self.status.frames_total > frames_before)
+
+    def _choose_decoder(self, got_frames: bool) -> None:
+        """Graphics card or processor for the next connection, from how this one went.
+        No frame on the card: try the processor. No frame on the processor either:
+        the camera was the trouble (offline, slow to answer), so the card again."""
+        if got_frames:
+            return
+        if self.status.hw_decode:
+            if not self._hw_off:
+                log.info("camera %r: no frames with hardware decoding; trying the CPU", self.camera["name"])
+            self._hw_off = True
+        elif self._hw_off:
+            self._hw_off = False
 
     def _sys_event(self, msg: str, conf: float) -> None:
         self.bus.publish(Event(
@@ -518,6 +590,7 @@ class CameraManager:
                 "url": c["url"],
                 "active": active,
                 "fps": round(w.status.fps, 1) if w else 0.0,
+                "hw_decode": bool(w and active and w.status.hw_decode),
                 "people": cam_people,
                 # Native frame size, so the dashboard can show the selected
                 # camera in its own aspect ratio.
@@ -619,7 +692,7 @@ class CameraManager:
             intruder_store=self.intruder_store,
             bus=self.bus,
         )
-        latest = LatestFrame()
+        latest = LatestFrame(max_width=lambda: self.settings.get("stream_max_width", 960))
         latest.set(disconnected_placeholder(text=f"{cam['name']}: starting..."))
         worker = CaptureWorker(camera=cam, pipeline=pipe,
                                bus=self.bus, latest=latest, clips=self.clips)

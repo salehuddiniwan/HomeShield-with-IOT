@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 INCIDENT_GAP_S = 120.0
 NOTE_MAX = 200
 OUTCOMES = ("acknowledged", "false_alarm")
+UNDO_S = 120.0          # how long after closing an incident its closer can undo it
 STATUSES = ("open",) + OUTCOMES
 CRITICAL, ATTENTION = 2, 1
 
@@ -248,7 +249,10 @@ class IncidentStore:
             by_kind = [dict(r) for r in conn.execute(q.format(col="kind"), (since,))]
             by_camera = [dict(r) for r in conn.execute(
                 q.format(col="COALESCE(camera_name, 'Unknown')"), (since,))]
-        return {"days": days, "by_kind": by_kind, "by_camera": by_camera}
+            # Kinds can hold more than one event type (an unknown face and motion
+            # while away are both "intruder"); the page says which they were.
+            by_type = [dict(r) for r in conn.execute(q.format(col="headline_type"), (since,))]
+        return {"days": days, "by_kind": by_kind, "by_camera": by_camera, "by_type": by_type}
 
     # ---- writes -----------------------------------------------------------
 
@@ -261,6 +265,20 @@ class IncidentStore:
                 "UPDATE incidents SET status = ?, resolved_by = ?, "
                 "resolved_at = ?, note = ? WHERE incident_id = ?",
                 (outcome, by, time.time(), note.strip() or None, int(incident_id)))
+            if cur.rowcount == 0:
+                return None
+        return self.get(incident_id)
+
+    def reopen(self, incident_id: int, *, by: str, within_s: float = UNDO_S) -> Optional[dict[str, Any]]:
+        """Undo a close: only the person who closed it, and only just after.
+
+        Returns None when that isn't the case (or the incident doesn't exist).
+        """
+        with write_conn(self.db_path) as conn:
+            cur = conn.execute(
+                "UPDATE incidents SET status = 'open', resolved_by = NULL, resolved_at = NULL, "
+                "note = NULL WHERE incident_id = ? AND status != 'open' AND resolved_by = ? "
+                "AND resolved_at >= ?", (int(incident_id), by, time.time() - within_s))
             if cur.rowcount == 0:
                 return None
         return self.get(incident_id)

@@ -48,7 +48,13 @@ DEFAULTS: dict[str, Any] = {
     "yolo_model": "yolo11n-pose.pt",
     "yolo_confidence": 0.50,
     "yolo_imgsz": 640,
-    "process_fps": 0,            # 0 = unlimited
+    "process_fps": 10,           # frames analysed per second per camera; 0 = every frame
+                                 # (10 is plenty for falls and halves the CPU of unlimited)
+
+    # Live view (cameras.py / server.py): what viewers are sent, apart from what is analysed.
+    "stream_fps": 10,            # frames per second to each viewer; 0 = every analysed frame
+    "stream_max_width": 960,     # px; 0 = the camera's full size
+    "hw_decode": True,           # decode network streams and files on the graphics card
     "use_fp16": True,
 
     # Fire detector
@@ -100,14 +106,19 @@ class SettingsStore:
             self._cache.update(missing)
 
     def _migrate(self) -> None:
-        """Patch settings whose default has changed in newer releases."""
+        """Patch settings whose default has changed in newer releases. Each patch runs
+        once, so a value someone picks afterwards (15 frames a second, say) stays."""
+        done = set(self._cache.get("migrations_done") or [])
         patches: dict[str, Any] = {}
-        # process_fps used to default to 15 (artificial throttle); now 0.
-        if self._cache.get("process_fps") == 15:
-            patches["process_fps"] = 0
+        # process_fps used to default to 15 (an artificial throttle) and was reset to 0.
+        if "process_fps_15" not in done:
+            if self._cache.get("process_fps") == 15:
+                patches["process_fps"] = 0
+            done.add("process_fps_15")
         if patches:
             log.info("migrating: %s", patches)
-            self.update(patches)
+        if patches or done != set(self._cache.get("migrations_done") or []):
+            self.update({**patches, "migrations_done": sorted(done)})
 
     def _write_many(self, items: dict[str, Any]) -> None:
         with write_conn(self.db_path) as conn:

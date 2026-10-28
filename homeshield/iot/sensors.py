@@ -92,11 +92,12 @@ ALARM_KINDS = {"gas": "gas", "climate": "heat", "flame": "fire", "water": "water
 
 # What a sensor suggests doing to the outputs in its room, per output kind.
 SUGGEST: dict[str, dict[str, str]] = {
-    "gas": {"fan": "1", "valve": "0", "light": "0", "socket": "0", "relay": "0", "dimmer": "0"},
-    "flame": {"valve": "0", "socket": "0", "relay": "0", "fan": "0", "light": "1"},
+    "gas": {"fan": "1", "fan_pwm": "100", "valve": "0", "light": "0", "socket": "0", "relay": "0",
+            "dimmer": "0"},
+    "flame": {"valve": "0", "socket": "0", "relay": "0", "fan": "0", "fan_pwm": "0", "light": "1"},
     "water": {"valve": "0", "socket": "0", "relay": "0"},
     "motion": {"light": "1", "dimmer": "100", "lock": "0"},
-    "climate": {"fan": "1"},
+    "climate": {"fan": "1", "fan_pwm": "100"},
 }
 # The checklist a new sensor starts with (device steps: output kinds in its room).
 DEFAULT_RESPONSE: dict[str, dict[str, list[str]]] = {
@@ -547,13 +548,15 @@ class SensorEngine:
 
     # ---- alerts ------------------------------------------------------------------
 
-    def acknowledge(self, device_id: int, by: str) -> None:
+    def acknowledge(self, device_id: int, by: str) -> Optional[int]:
+        """Returns the incident it closed, if there was one (for an undo)."""
         dev = self._sensor(device_id)
         with self._lock:
             ep = (self._w.get(device_id) or {}).get("episode")
             if ep is None or ep["acked"]:
-                return
-            ep["acked"] = {"by": by, "at": self._clock()}
+                return None
+            rang = self.alarm.ring_kind(("sensor", device_id)) if self.alarm is not None else None
+            ep["acked"] = {"by": by, "at": self._clock(), "rang": rang}
             iid = ep["incident_id"]
         if self.alarm is not None:
             self.alarm.unring(("sensor", device_id))
@@ -563,6 +566,7 @@ class SensorEngine:
                        by=by, device_id=device_id, node_id=dev["node_id"])
         self.hub._notify("activity")
         self._changed()
+        return iid
 
     def sound(self, device_id: int, by: str) -> None:
         dev = self._sensor(device_id)
@@ -587,9 +591,24 @@ class SensorEngine:
             if change in ("opened", "updated", "escalated"):
                 ep["incident_id"] = inc.get("incident_id")
                 return
+            if change == "reopened":
+                # Someone undid closing it: the alert is back, and so is the buzzer if it was sounding.
+                if ep["incident_id"] != inc.get("incident_id") or not ep["acked"]:
+                    return
+                rang = ep["acked"].get("rang")
+                ep["acked"] = None
+            else:
+                rang = None
+        if change == "reopened":
+            if rang and self.alarm is not None:
+                self.alarm.ring(("sensor", did), rang)
+            self._changed()
+            return
+        with self._lock:
             if change != "resolved" or ep["incident_id"] != inc.get("incident_id") or ep["acked"]:
                 return
-            ep["acked"] = {"by": inc.get("resolved_by") or "someone", "at": self._clock()}
+            rang = self.alarm.ring_kind(("sensor", did)) if self.alarm is not None else None
+            ep["acked"] = {"by": inc.get("resolved_by") or "someone", "at": self._clock(), "rang": rang}
         if self.alarm is not None:
             self.alarm.unring(("sensor", did))
         self._changed()
@@ -950,6 +969,9 @@ class SensorEngine:
         if kind == "dimmer":
             return f"Turn on {name}" if value == "100" else (
                 f"Switch off {name}" if value == "0" else f"Set {name} to {value} %")
+        if kind == "fan_pwm":
+            return f"Switch off {name}" if value == "0" else (
+                f"Turn on {name} ({describe(kind, value).lower()})")
         return f"{'Turn on' if value == '1' else 'Switch off'} {name}"
 
     def _response(self, dev: dict[str, Any], devices: list[dict[str, Any]]) -> dict[str, Any]:

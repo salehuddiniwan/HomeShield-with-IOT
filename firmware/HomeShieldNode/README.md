@@ -77,6 +77,7 @@ Some ESP32 boards don't switch to upload mode by themselves. Press **Upload**, a
 |---|---|---|
 | Relay module (light, socket, fan, lock, valve) | 4, 5, 13, 14, 16–19, 21–23, 25–27, 32, 33 | Most relay modules switch on with LOW: leave "Switches on with LOW" ticked. |
 | Dimmer (PWM: LED strip driver, MOSFET) | same as relays | 0–100 %. |
+| Fan with speed control (PWM: logic-level MOSFET module or PWM fan driver, DC fan) | same as relays | Low 40 %, Medium 70 %, High 100 %. A relay can only switch a fan on or off, and the board's 5 kHz PWM can't drive a mains (AC) fan. |
 | Buzzer | 25 (any output pin) | Tick "Passive" for a buzzer that needs a tone. One buzzer per node. |
 | SOS button, PIR, flame, water | any of the above | The button goes between the pin and GND. |
 | PIR, flame, water (input only) | 34, 35, 36, 39 also work | No internal pull-up on these. |

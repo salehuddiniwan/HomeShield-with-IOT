@@ -4,7 +4,7 @@
 
 **HomeShield IoT** adds an **alarm buzzer on an ESP32** (a DevKit with a CP2102 USB chip): when an incident starts, the buzzer in the house sounds a pattern for fire, a fall, an intruder or a danger zone until someone handles the incident or presses the button on the board. The same board has an **SOS button**: someone who needs help holds it, and HomeShield opens a critical incident, sends the WhatsApp alerts and sounds SOS on every buzzer. The board connects to the HomeShield computer with a USB cable, or over Wi-Fi.
 
-It also turns ESP32 boards into **smart-home nodes**. Flash one sketch, set the board up from a phone, and map its pins from the dashboard: relays for lights, sockets, a fan, a door lock or a gas valve, a dimmer, and sensors for motion, flame, water, gas and temperature. Everyone can switch them and run **scenes** (e.g. Night: lamp 20 %, porch light on, door locked) from the **Devices** page. The boards talk to HomeShield over MQTT through its own Mosquitto broker.
+It also turns ESP32 boards into **smart-home nodes**. Flash one sketch, set the board up from a phone, and map its pins from the dashboard: relays for lights, sockets, a fan, a door lock or a gas valve, a dimmer, a fan with speed control, and sensors for motion, flame, water, gas and temperature. Everyone can switch them and run **scenes** (e.g. Night: lamp 20 %, porch light on, door locked) from the **Devices** page. The boards talk to HomeShield over MQTT through its own Mosquitto broker.
 
 Built as a Final-Year Project at the **International Islamic University Malaysia (IIUM), Kulliyyah of Information and Communication Technology**.
 
@@ -31,7 +31,7 @@ Built as a Final-Year Project at the **International Islamic University Malaysia
 - **Incident clips** — each incident also gets a short video, from 5 seconds before it began to 15 seconds after its last detection (both adjustable), with the detector overlays. Watch it in the incident window, on phones too, or download it. Clips are H.264 MP4 made with Windows' own encoder, about 1 MB each, and are deleted after 30 days (adjustable).
 
 ### Smart devices (ESP32 nodes)
-- **Devices page** — every light, socket, fan, lock, valve, dimmer and sensor by room, with its live state, switches and dimmer sliders. Guests can switch them too; only admins add or change them.
+- **Devices page** — every light, socket, fan, lock, valve, dimmer and sensor by room, with its live state, switches, dimmer sliders and fan speeds (Low, Medium, High). A dimmable light or speed fan has a switch too: off, then back on at its last level. Guests can switch them too; only admins add or change them.
 - **Scenes** — set several devices at once with one tap (Night, Leaving home…).
 - **Device activity** — who switched what and when, scenes, auto-lock, and boards going offline and coming back.
 - **ESP32 nodes page (admins)** — the boards with their room, IP address, Wi-Fi signal, firmware and uptime; each board's **pin map** with a live value per pin and its MQTT topics; Blink LED (to find a board), Restart and **Update over Wi-Fi**.
@@ -60,8 +60,9 @@ Built as a Final-Year Project at the **International Islamic University Malaysia
 
 ### Zones
 - **Polygon zones per camera** drawn directly on the live preview.
-- **Safe zones** suppress lying / inactivity alerts (e.g. on a bed or sofa).
+- **Safe zones** suppress lying / inactivity alerts (e.g. on a bed or sofa). A fall or lying there is still drawn on the video, in grey and marked *ignored*.
 - **Danger zones** trigger a child-entry alert when a person crosses into them (kitchen, balcony, pool, etc.).
+- **Fireplace zones** ignore fire and smoke that stays inside them (a fireplace, a gas stove, candles). A flame counts as inside when at least 60% of its box is; a fire spreading out of the zone still alerts. Ignored flames stay on the video in grey, labelled *ignored*.
 
 ### Platform
 - **Who's online (admins)** — the sidebar shows which accounts are using the dashboard right now, on which devices (phone or computer), whether the tab is in front, whether they came in over the internet, and when every other account was last seen. **Settings → Users** shows the same in its **Last seen** column. Guests see the monitoring state there instead.
@@ -425,9 +426,13 @@ The pipeline loops the file and plays it in real time, like a camera: when the G
 
 ### Register your family members
 1. Make sure face recognition is on (**Settings → Face recognition**); registering needs it.
-2. Go to **People → Register a person** and enter the person's name and category.
-3. Pick a camera, ask them to look straight at it, and press **Capture from camera** once the preview says **FACE OK**.
+2. Go to **People → Register a person**, enter the person's name and press their category (**Elderly**, **Adult** or **Child**).
+3. Under **Take the face from**, either:
+   - press a camera, ask them to look straight at it, and press **Capture from camera** once the preview says **FACE OK**; or
+   - press **Photo file** and choose a clear photo of their face from this computer (or drop the photo on the preview), then press **Register from photo** once it says **FACE OK**. In a group photo the largest face is used. The page sends a copy at most 1600 px wide; JPG and PNG work; iPhone HEIC photos may not open in the browser.
 4. Repeat for every household member.
+
+Each person gets a card with their photo (head and shoulders), name and category; the picture's background is gold for Elderly, blue for Adult and green for Child. The card also says when a camera last recognised them and which one, for example **Seen 5 min ago at Living room** (a green dot means the last 10 minutes), or **Not seen yet**. The time is saved at most once a minute per person, so it survives a restart. To remove someone, press the bin on their photo. People registered before this version keep their older, tighter face photo until you register them again.
 
 > ⚠️ **Important:** Register everyone soon after turning face recognition on. Until then, household members show up under **People → Intruders seen**; you can register them straight from there.
 
@@ -437,6 +442,7 @@ The pipeline loops the file and plays it in real time, like a camera: when the G
 3. Tag the zone:
    - **Safe zone** → suppresses lying / inactivity alerts inside it (use this for beds, sofas, recliners).
    - **Danger zone** → triggers a child-entry alert when anyone enters (kitchen, balcony, pool, stairs).
+   - **Fireplace zone** → fire and smoke that stays inside it are ignored (fireplace, stove, candles); a fire spreading beyond it still alerts.
 4. Save. Zones apply live, no restart needed.
 
 ### Watch the live feed
@@ -464,7 +470,7 @@ Open **Sensors**. The big chart shows the selected sensor; click another sensor'
 
 ### Automations
 
-Open **Automations** (admins). Pick a rule on the left or press **+ New automation**.
+Open **Automations** (admins). Pick a rule in the **Rules** list on the right or press **+ New automation**.
 
 1. Under **When**, add one or more triggers; any of them starts it.
 2. Under **And only if**, add conditions that must all hold (e.g. *Between 22:00 and 06:00*, *HomeShield is Away*).
@@ -488,10 +494,10 @@ While the ESP32 buzzer sounds, the verdict at the top of **Live feeds** shows **
 | Three low beeps, once | The board lost contact with HomeShield for 15 s |
 
 ### Handle intruders
-When an unknown face appears, an entry pops into **People → Intruders seen** with a snapshot and timestamp. From there you can:
-- **Register** them (name and category) if it's someone you know.
-- **Dismiss** the entry if it was a false positive (poor lighting, motion blur, partial face).
-- **Delete** a dismissed entry and its photo for good (tick **Show dismissed** to see them).
+When an unknown face appears, a card pops into **People → Intruders seen** with a snapshot on rose, and where and when it was seen (**Seen 3 min ago at Front door**). From there you can:
+- **Register** them (name and category) if it's someone you know. They keep the snapshot as their photo, and the sighting as their last seen.
+- **Dismiss** the entry if it was a false positive (poor lighting, motion blur, partial face). A dismissed card turns slate.
+- **Delete** a dismissed entry and its photo for good with the bin on its photo (tick **Show dismissed** to see them).
 
 ---
 
@@ -503,7 +509,9 @@ All knobs live in **Settings** and apply live without restarting cameras. Changi
 |---|---|---|
 | **Pose model** | Smaller (`yolo11n-pose`) = faster, less accurate. `yolo26x-pose` = slowest, best accuracy. | Drop to `n` on CPU or low-end GPU. |
 | **imgsz** | Inference resolution (320 / 416 / 640). | Lower for more FPS, higher for far-away subjects. |
-| **Target FPS cap** | Caps the capture loop. | Set to 10–15 on CPU. |
+| **Frames analysed per second** | Frames per second each camera's detectors analyse; 0 = every frame the camera sends. Default 10. | 10 is plenty for falls; 0 costs about 3× the CPU on a 30 FPS camera. |
+| **Live view: frames per second / picture size** (*Settings → Cameras*) | What each viewer is sent: default 10 FPS at 960 px wide. Detection is unaffected. | Lower for phones or slow Wi-Fi; raise for a smoother picture. |
+| **Decode video on the graphics card** (*Settings → Cameras*) | Network streams and video files are decoded by the GPU (D3D11 on Windows), about half the CPU per frame; a camera that can't use it falls back to the CPU by itself. Webcams always use the CPU. | Leave **on**; applies when a camera reconnects. |
 | **FP16 (half-precision)** | Halves model memory on NVIDIA GPUs. At one frame per call the speed gain is small (~3% for `yolo11x-pose` on an RTX 4070); detections are unchanged (keypoints within 0.1 px of FP32). | Leave **on**; it is ignored on CPU. |
 | **Frame skipping** | Pose runs every frame; fire every 2nd; face every 5th. | Bump face skip if face inference is the bottleneck. |
 | **Fire / Face enabled** | Toggle the heavier detectors. | Disable face on CPU-only setups. |

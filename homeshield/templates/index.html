@@ -444,10 +444,7 @@ button.sys-status[aria-expanded="true"]{border-bottom-left-radius:0;border-botto
 .scene-run:hover{color:#fff;background:var(--primary-grad);box-shadow:var(--primary-shadow)}
 .scene-run:active{box-shadow:var(--neu-inset-sm)}
 .scene-run:disabled{opacity:.5;cursor:wait}
-.scene-edit{
-  background:var(--surface-raised);box-shadow:var(--neu-raised-sm);border:1px solid var(--neu-edge);
-  border-radius:16px;display:flex;align-items:center;justify-content:center;padding:12px 16px;
-}
+.scene-edit{display:flex;align-items:center;justify-content:flex-start}
 .iot-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
 .iot-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .iot-title{
@@ -591,6 +588,12 @@ button.sys-status[aria-expanded="true"]{border-bottom-left-radius:0;border-botto
 .room-tab:focus-visible,.scene-run:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
 .iot-side{display:flex;flex-direction:column;gap:18px;min-width:0}
+/* Two-column work layouts: the shorter column keeps pace with the longer one instead of
+   leaving a void. It sticks under the top bar; one taller than the window scrolls until its
+   end is in view and sticks there (fitStickyColumns sets --stick-top), so all of it stays
+   reachable. The taller column can't move, so both columns carry the rule. */
+@media(min-width:1101px){.iot-layout > *{position:sticky;top:var(--stick-top, 80px)}}
+@media(min-width:1201px){.auto-layout > *{position:sticky;top:var(--stick-top, 80px)}}
 .side-card{
   background:var(--surface-raised);border:1px solid var(--neu-edge);
   border-radius:var(--r-card);padding:18px 20px;min-width:0;
@@ -888,7 +891,9 @@ button.sys-status[aria-expanded="true"]{border-bottom-left-radius:0;border-botto
   padding:2px 7px;border-radius:999px;background:var(--primary-dim);color:var(--primary-text);margin-right:8px;vertical-align:1px;
 }
 .inc-table tbody tr{cursor:pointer}
-.inc-table .reading{font-weight:700;color:var(--danger-text)}
+.inc-table .reading{font-weight:700;color:var(--text)}
+.inc-table .reading.hot{color:var(--danger-text)}
+.inc-table .reading.warm{color:var(--amber-text)}
 .inc-where{display:none}
 .conn-key.masked{white-space:nowrap;overflow:hidden;text-overflow:clip;overflow-wrap:normal;letter-spacing:.12em}
 @media(max-width:600px){
@@ -1098,7 +1103,14 @@ button.sys-status[aria-expanded="true"]{border-bottom-left-radius:0;border-botto
   .users-table .user-actions{margin-top:8px;gap:6px}
   .dev-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .dev-card{padding:13px;min-height:164px}
-  .scene-bar{grid-template-columns:minmax(0,1fr)}
+  /* the scenes are one row you swipe, edge to edge, so the devices start on the first screen */
+  .scene-bar{
+    display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+    margin:10px -14px 0;padding:6px 14px 10px;scroll-padding:0 14px;
+  }
+  .scene-bar::-webkit-scrollbar{display:none}
+  .scene{flex:0 0 80%;padding:10px 14px;scroll-snap-align:start}
+  .scene-edit{flex:none;scroll-snap-align:end}   /* a snap point, so the swipe can reach it */
 }
 @media(prefers-reduced-motion:reduce){.sw::after{transition:none}}
 .s-label{font-size:var(--fs-label);color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;font-family:'Rubik',sans-serif;font-weight:600}
@@ -1590,7 +1602,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--primary)}
    stands in a panel of the category's colour (blue adult, gold elderly, green child; rose
    for an intruder, slate once dismissed): a photo inset from the top and sides, or a white
    head-and-shoulders silhouette. Below: the name, a category tag, when last seen. */
-.persons-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:16px}
+.persons-grid{display:grid;grid-template-columns:repeat(auto-fill,190px);gap:16px}
 .person-card{
   --pc-a:var(--pc-adult-a);--pc-b:var(--pc-adult-b);
   position:relative;display:flex;flex-direction:column;overflow:hidden;
@@ -1638,7 +1650,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--primary)}
 .pc-tag.cat-intruder{background:var(--danger-dim);color:var(--danger-text)}
 .pc-tag.cat-dismissed{background:var(--surface-inset);color:var(--text-2)}
 .pc-seen{display:flex;align-items:baseline;gap:6px;margin:8px 0 0;font-size:var(--fs-meta);line-height:1.45;color:var(--text-2)}
-.pc-seen > span{text-wrap:balance}         /* "Seen 3 min ago / at Front door", not "… Front / door" */
+.pc-at{display:inline-block}                /* "Seen 2 hours ago / at Front door", never "… hours / ago at" */
 .pc-seen.never{color:var(--text-3)}
 .pc-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--success);transform:translateY(-1px)}
 .person-card.is-intruder .pc-dot{background:var(--danger)}
@@ -1760,7 +1772,7 @@ input[type=radio]{position:absolute;opacity:0;pointer-events:none;width:1px;heig
 }
 .save-bar.dirty{display:flex}
 .save-status{display:flex;align-items:center;gap:8px}
-.save-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);animation:blink 1.5s infinite;flex-shrink:0}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);flex-shrink:0}   /* steady: pulsing is for critical and sounding */
 .save-actions{display:flex;gap:8px}
 .cam-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .cam-item{
@@ -1889,6 +1901,8 @@ body:has(#snapshotModal.show) #hs-toast{top:max(12px,env(safe-area-inset-top));b
   font-family:'Chakra Petch',sans-serif;font-size:var(--fs-label);font-weight:700;
   letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--text-3);
 }
+.board-sub.has-act{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:6px;padding-bottom:6px}
+.board-sub .btn{text-transform:none;letter-spacing:.01em}
 .board-more{
   display:block;width:100%;padding:10px 14px;text-align:left;cursor:pointer;
   background:transparent;border:0;color:var(--primary-text);
@@ -1956,6 +1970,7 @@ body:has(#snapshotModal.show) #hs-toast{top:max(12px,env(safe-area-inset-top));b
 .inc-actions textarea:focus{border-color:var(--primary)}
 .note-count{font-size:var(--fs-meta);color:var(--text-3);text-align:right;font-variant-numeric:tabular-nums;margin-top:-4px}
 .inc-buttons{display:flex;gap:10px;flex-wrap:wrap}
+.inc-happening{margin:2px 0 0;font-size:var(--fs-ui);line-height:1.45;color:var(--text-2)}
 .inc-buttons .btn{flex:1 1 120px;justify-content:center;padding-top:10px;padding-bottom:10px}
 .inc-sheet-error{margin-top:12px}
 .modal{max-height:calc(100dvh - 32px);overflow-y:auto}
@@ -1976,6 +1991,10 @@ body:has(#snapshotModal.show) #hs-toast{top:max(12px,env(safe-area-inset-top));b
 .log-filters[hidden],.inc-stats[hidden]{display:none}
 #incFilters,#rawFilters{margin-bottom:12px;flex-wrap:wrap}
 .inc-stats{margin-bottom:16px}
+.inc-stats-quiet{
+  margin:0;padding:12px 16px;border-radius:14px;font-size:var(--fs-ui);color:var(--text-2);
+  background:var(--surface-raised);box-shadow:var(--neu-raised-sm);border:1px solid var(--neu-edge);
+}
 .inc-stats-head{font-family:'Chakra Petch',sans-serif;font-size:var(--fs-label);font-weight:700;letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--text-3);margin-bottom:8px}
 .inc-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;background:transparent;border:none;border-radius:0;overflow:visible}
 /* Title across the top; the last line (its words left, the count right) pinned to the bottom,
@@ -2002,7 +2021,9 @@ body:has(#snapshotModal.show) #hs-toast{top:max(12px,env(safe-area-inset-top));b
 .port-row{display:flex;gap:8px;align-items:center}
 .port-row select{flex:1;min-width:0}
 .check-group{display:flex;flex-direction:column;gap:9px}
-.check-group .mustchange-label{white-space:normal;align-items:flex-start}
+.check-group .mustchange-label,.iot-dialog .mustchange-label{white-space:normal;align-items:flex-start}
+.iot-dialog .mustchange-label{margin-bottom:12px !important}   /* the base rule's 0 is !important */
+.iot-dialog .mustchange-label input[type=checkbox]{margin-top:2px}
 .check-group .mustchange-label input[type=checkbox]{margin-top:2px}
 .key-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .key-row code{
@@ -2181,9 +2202,16 @@ input[type=number]{-moz-appearance:textfield}
   .persons-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   #page-live.active{display:flex;flex-direction:column}
   #page-live > .wx-row{order:1}
+  #page-live > .cam-section{order:2}
   #page-live > .log-header{order:3}
   #page-live > .board-wrap{order:4}
-  #page-live > .cam-section{order:5}
+  .iot-row .room-tabs{
+    flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent);
+            mask-image:linear-gradient(90deg,#000 calc(100% - 18px),transparent);
+  }
+  .iot-row .room-tabs::-webkit-scrollbar{display:none}
+  .iot-row .room-tab{flex:none;white-space:nowrap}
   .topbar-chips{display:none}
   .tb-status{display:flex}
   .topbar-title{font-size:var(--fs-title);letter-spacing:0}
@@ -2245,9 +2273,9 @@ input[type=number]{-moz-appearance:textfield}
 @media(max-width:900px) and (max-height:500px){
   #page-live.active{display:flex;flex-direction:column}
   #page-live > .wx-row{order:1}
+  #page-live > .cam-section{order:2}
   #page-live > .log-header{order:3}
   #page-live > .board-wrap{order:4}
-  #page-live > .cam-section{order:5}
 }
 @media(pointer:coarse){
   .btn,.btn-sm,.nav-item,.set-nav-item{min-height:44px}
@@ -2259,6 +2287,9 @@ input[type=number]{-moz-appearance:textfield}
   .edit-rule{position:relative}
   .edit-rule::before{content:"";position:absolute;inset:-13px -8px}
   .scene-run{min-height:44px;min-width:44px;padding:0 12px}
+  .dev-seg button{min-height:44px}
+  .resp-item{min-height:44px;align-items:center}
+  .pc-del::after{content:"";position:absolute;inset:-4px;border-radius:50%}
   .sw::before{content:"";position:absolute;inset:-11px -4px}
   .ae-tools{position:static;grid-column:1 / -1;opacity:1;justify-content:flex-end;gap:6px;margin-top:8px}
   .ae-tools button{width:44px;height:44px}
@@ -2278,7 +2309,7 @@ input[type=number]{-moz-appearance:textfield}
 }
 .flip-char{display:inline-block;transform-origin:center 60%;backface-visibility:hidden}
 .board-row--enter .flip-char{animation:flipChar 180ms cubic-bezier(0.16,1,0.3,1) both}
-@media(prefers-reduced-motion:reduce){.board-row--enter .flip-char{animation:none}.conn-banner strong::before{animation:none}.verdict .verdict-lamp,.save-dot{animation:none}}
+@media(prefers-reduced-motion:reduce){.board-row--enter .flip-char{animation:none}.conn-banner strong::before{animation:none}.verdict .verdict-lamp{animation:none}}
 .board-row[data-eid]{cursor:pointer}
 .board-row:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
 .bhcell:last-child{border-right:none}
@@ -3470,7 +3501,7 @@ body:not(.is-admin):not(.is-guest) .sidebar-backdrop{visibility:hidden !importan
           <p style="font-size:var(--fs-ui);color:var(--text-2);line-height:1.6;max-width:600px">Faces that didn't match anyone registered. <strong>Register</strong> someone you know, or <strong>Dismiss</strong> the entry.</p>
         </div>
         <label style="font-size:var(--fs-meta);color:var(--text-2);display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none">
-          <input type="checkbox" id="intruderShowDismissed" onchange="loadIntruders()" style="accent-color:var(--amber)">
+          <input type="checkbox" id="intruderShowDismissed" onchange="loadIntruders()" style="accent-color:var(--primary)">
           Show dismissed
         </label>
       </div>
@@ -4864,6 +4895,20 @@ function stopPageActivity() {
   stopSensorsPage();
   stopAutomationsPage();
 }
+// Devices and Automations: the shorter column sticks under the top bar, or, when taller
+// than the window, at the point where its end is in view (see .iot-layout > * in the CSS).
+function fitStickyColumns() {
+  const top = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h')) || 64) + 16;
+  document.querySelectorAll('.iot-layout > *, .auto-layout > *').forEach(col => {
+    col.style.setProperty('--stick-top', Math.min(top, innerHeight - col.offsetHeight - 16) + 'px');
+  });
+}
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(fitStickyColumns);
+  document.querySelectorAll('.iot-layout > *, .auto-layout > *').forEach(col => ro.observe(col));
+}
+addEventListener('resize', fitStickyColumns);
+
 // A hidden tab streams nothing; the event stream stays open so alerts still
 // arrive (and the open-incident count stays current in the tab title).
 document.addEventListener('visibilitychange', () => {
@@ -5543,7 +5588,9 @@ function loadBoard() {
     const stale = b.open.filter(isStale);
     const parts = b.open.filter(i => !isStale(i)).map(incidentRow);
     if (stale.length) {
-      parts.push('<div class="board-sub">Still open from earlier</div>');
+      parts.push(stale.length > 1
+        ? `<div class="board-sub has-act"><span>Still open from earlier</span><button class="btn btn-sm" type="button" data-ack-old="1">Acknowledge all ${stale.length}</button></div>`
+        : '<div class="board-sub">Still open from earlier</div>');
       stale.forEach(i => parts.push(incidentRow(i)));
     }
     if (b.open_total > b.open.length) {
@@ -5578,16 +5625,24 @@ function householdVerdict() {
   const camsStopped = !!(s && s.cameras_total && !s.running);
   const sensorsWatched = !!(iot.sensors_total && iot.connected);
   const plural = (n, one, many) => n === 1 ? one : many;
-  if (b.open_total) {
-    const fresh = b.open.filter(i => !isStale(i));
-    const top = fresh[0] || b.open[0];
+  const fresh = b.open.filter(i => !isStale(i));
+  // Open incidents with nothing new for 12 hours don't keep the house amber: the calm
+  // verdict below carries them as a note, on Live only, and never says "All clear".
+  const oldN = b.open_total && !fresh.length ? b.open_total : 0;
+  const oldNote = oldN ? `${oldN} older ${plural(oldN, 'incident is', 'incidents are')} still open; ` +
+    `acknowledge ${plural(oldN, 'it', 'them')} once you've checked.` : '';
+  const withOld = text => oldNote ? `${text} ${oldNote}` : text;
+  if (b.open_total && fresh.length) {
+    const top = fresh[0];
+    // The title names the danger and where ("Gas level high · Kitchen"), not a count; the
+    // line says when, and how many more are open.
     return {
       state: fresh.some(i => i.severity === 'critical') ? 'critical' : 'attention', urgent: true,
-      title: b.open_total === 1 ? '1 incident needs attention' : `${b.open_total} incidents need attention`,
-      sub: [incidentTitle(top), top.camera_name || 'Unknown camera',
-            top.active ? 'happening now' : 'since ' + fmtWhen(top.started_ts),
-            sounding && 'buzzer sounding', camsStopped && 'camera monitoring stopped'].filter(Boolean).join(' · '),
-      action: {label: b.open_total === 1 ? 'Review' : 'Review first', run: () => openIncident(top.incident_id)},
+      title: [incidentTitle(top), top.camera_name].filter(Boolean).join(' · '),
+      sub: [top.active ? 'Happening now' : 'Since ' + fmtWhen(top.started_ts),
+            b.open_total > 1 && `${b.open_total - 1} more open`,
+            sounding && 'buzzer sounding', camsStopped && 'camera monitoring stopped'].filter(Boolean).join(' · '),
+      action: {label: 'What to do', run: () => openIncident(top.incident_id)},
     };
   }
   const alerts = _sensAlerts || [];
@@ -5627,8 +5682,8 @@ function householdVerdict() {
   const startHint = admin ? 'Use Start monitoring in the menu to watch the cameras again.' : 'Ask an admin to start it.';
   if (camsStopped) {
     return sensorsWatched
-      ? {state: 'idle', title: 'Camera monitoring stopped', sub: `Sensors are still watched. ${startHint}`}
-      : {state: 'idle', title: 'Not monitoring', sub: `Monitoring is stopped. ${startHint}`};
+      ? {state: 'idle', title: 'Camera monitoring stopped', sub: withOld(`Sensors are still watched. ${startHint}`)}
+      : {state: 'idle', title: 'Not monitoring', sub: withOld(`Monitoring is stopped. ${startHint}`)};
   }
   if (s && !s.cameras_total && !sensorsWatched) {
     return {state: 'idle', title: 'Not monitoring',
@@ -5637,12 +5692,14 @@ function householdVerdict() {
   }
   const offline = s && s.cameras_total ? s.cameras_total - s.cameras_online : 0;
   const last = b.recent[0];
-  let text = !b.has_any ? 'No incidents yet. They appear here when a camera or sensor spots a fall, fire, gas, a leak or someone unknown.'
+  const lastOld = oldN ? Math.max(...b.open.map(i => i.last_ts || i.started_ts || 0)) : 0;
+  let text = oldN ? `Nothing new since ${fmtWhen(lastOld)}. ${oldNote}`
+    : !b.has_any ? 'No incidents yet. They appear here when a camera or sensor spots a fall, fire, gas, a leak or someone unknown.'
     : last ? `Nothing needs attention. Last: ${incidentTitle(last)} on ${last.camera_name || 'a camera'} ${fmtWhenAt(last.started_ts)}, ${incidentState(last).toLowerCase()}.`
     : 'Nothing needs attention.';
   if (s && !s.cameras_total) text += ' Sensors are watched; there are no cameras yet.';
   if (offline > 0) text += ` ${offline} of ${s.cameras_total} cameras ${offline > 1 ? 'are' : 'is'} offline and can't see ${offline > 1 ? 'their rooms' : 'its room'}.`;
-  return {state: 'clear', title: 'All clear', sub: text};
+  return oldN ? {state: 'idle', title: 'No new incidents', sub: text} : {state: 'clear', title: 'All clear', sub: text};
 }
 
 function renderVerdict() {
@@ -5872,14 +5929,18 @@ function renderIncidentSheet(inc) {
       (inc.note ? `<q>${escapeHtml(inc.note)}</q>` : '') + '</div>';
   }
   const iid = escapeHtml(String(inc.incident_id));
+  // Still happening: closing it now means more of the same joins it silently, so
+  // Acknowledge steps back (View live leads for a camera) and the line says why.
+  const happening = open && inc.active;
   const live = inc.camera_id != null
-    ? `<button class="btn" type="button" onclick="viewLive(${parseInt(inc.camera_id) || 0})">View live</button>` : '';
+    ? `<button class="btn ${happening ? 'btn-primary' : ''}" type="button" onclick="viewLive(${parseInt(inc.camera_id) || 0})">View live</button>` : '';
   out += `<div class="inc-actions">` +
     `<label for="incNote">${open ? 'Note (optional)' : 'Change the outcome'}</label>` +
     `<textarea id="incNote" maxlength="200" placeholder="${escapeHtml(noteExample(inc))}">${escapeHtml(open ? '' : inc.note || '')}</textarea>` +
     `<div class="note-count" id="incNoteCount" aria-hidden="true"></div>` +
+    (happening ? `<p class="inc-happening">Still happening. Once you acknowledge it, more of the same won't alert again unless it gets worse.</p>` : '') +
     `<div class="inc-buttons">${live}` +
-      `<button class="btn ${open || inc.status === 'false_alarm' ? 'btn-primary' : ''}" type="button" onclick="resolveIncident(${iid}, 'acknowledged', this)">Acknowledge</button>` +
+      `<button class="btn ${(open && !happening) || inc.status === 'false_alarm' ? 'btn-primary' : ''}" type="button" onclick="resolveIncident(${iid}, 'acknowledged', this)">Acknowledge</button>` +
       `<button class="btn ${!open && inc.status === 'acknowledged' ? 'btn-primary' : ''}" type="button" onclick="resolveIncident(${iid}, 'false_alarm', this)">False alarm</button>` +
     `</div></div>`;
   document.getElementById('modalExtra').innerHTML = out;
@@ -5947,6 +6008,37 @@ function resolveIncident(iid, outcome, btn, note) {
       pollStatus();
       if (currentPage === 'events') refreshEventsPage();
     }).catch(err => toastError("Couldn't update the incident.", err)));
+}
+
+// "Acknowledge all N" on the Still open from earlier divider: each old incident is closed
+// as a single Acknowledge would, and one Undo reopens every one that closed.
+function acknowledgeOlder(btn) {
+  const ids = ((_lastBoard && _lastBoard.open) || []).filter(isStale).map(i => String(i.incident_id));
+  if (!ids.length) return;
+  withBusy('ack-older', btn, () => Promise.allSettled(ids.map(id =>
+      sendJSON(API + '/api/incidents/' + encodeURIComponent(id) + '/resolve', {outcome: 'acknowledged', note: ''})))
+    .then(rs => {
+      const done = ids.filter((_, k) => rs[k].status === 'fulfilled');
+      if (done.length) showToast(`${done.length} older ${done.length === 1 ? 'incident' : 'incidents'} acknowledged.`,
+                                 'info', 10000, {label: 'Undo', run: () => reopenIncidents(done)});
+      if (done.length < ids.length) toastError(`Couldn't acknowledge ${ids.length - done.length} of them.`, rs.find(r => r.status === 'rejected').reason);
+      loadBoard();
+      pollStatus();
+      if (currentPage === 'events') refreshEventsPage();
+    }));
+}
+function reopenIncidents(ids) {
+  withBusy('reopen-older', null, () => Promise.allSettled(ids.map(id =>
+      sendJSON(API + '/api/incidents/' + encodeURIComponent(id) + '/reopen', {})))
+    .then(rs => {
+      const n = rs.filter(r => r.status === 'fulfilled').length;
+      if (n) showToast(`${n} ${n === 1 ? 'incident is' : 'incidents are'} open again.`);
+      if (n < ids.length) toastError("Couldn't undo it for all of them.", rs.find(r => r.status === 'rejected').reason);
+      ids.forEach(id => incidentCache.delete(id));
+      loadBoard();
+      pollStatus();
+      if (currentPage === 'events') refreshEventsPage();
+    }));
 }
 
 // Undo a close (the server allows it for two minutes, to the person who closed it):
@@ -6042,6 +6134,12 @@ function loadIncidentStats() {
         ? `<small class="inc-split">${byType.intruder_detected || 0} unknown face${byType.intruder_detected === 1 ? '' : 's'} · ${byType.motion_detected || 0} motion while away</small>` : '';
       return `<div class="inc-stat"><b>${label}</b><span class="n">${r.total}</span>${split}${fa}</div>`;
     }).join('');
+    if (!(s.by_kind || []).some(k => k.total)) {
+      const open = (_lastBoard && _lastBoard.open_total) || 0;
+      el.innerHTML = `<p class="inc-stats-quiet">No new incidents in the last ${s.days} days.` +
+        (open ? ` ${open} from earlier ${open === 1 ? 'is' : 'are'} still open.` : '') + '</p>';
+      return;
+    }
     const cams = (s.by_camera || []).filter(c => c.false_alarm > 0)
       .map(c => `${escapeHtml(c.key)} ${c.false_alarm}`).join(' · ');
     el.innerHTML = `<div class="inc-stats-head">Last ${s.days} days</div><div class="inc-stats-grid">${cells}</div>` +
@@ -6174,6 +6272,8 @@ document.addEventListener('click', function (ev) {
   if (!t || !t.closest) return;
   const review = t.closest('[data-review]');
   if (review) { openIncident(review.dataset.review); return; }
+  const old = t.closest('[data-ack-old]');
+  if (old) { acknowledgeOlder(old); return; }
   const ack = t.closest('[data-ack]');
   if (ack) {
     let next = ack.closest('.board-row').nextElementSibling;
@@ -6451,7 +6551,7 @@ function seenLineHTML(ts, camera) {
   const exact = new Date(ts * 1000).toLocaleString('en-GB', {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
   const cam = camera ? escapeHtml(camera) : '';
   const dot = Date.now() / 1000 - ts < 600 ? '<span class="pc-dot" aria-hidden="true"></span>' : '';
-  return `<p class="pc-seen" data-ts="${ts}" data-cam="${cam}" title="${exact}">${dot}<span>Seen ${seenAgo(ts)}${cam ? ' at ' + cam : ''}</span></p>`;
+  return `<p class="pc-seen" data-ts="${ts}" data-cam="${cam}" title="${exact}">${dot}<span>Seen ${seenAgo(ts)}${cam ? ` <span class="pc-at">at ${cam}</span>` : ''}</span></p>`;
 }
 // While the page is open the seen lines stay current: a face a camera has just recognised
 // moves its card to "Seen just now", and every other time counts on.
@@ -9227,14 +9327,31 @@ function saveResponse(el) {
   const s = selectedSensor();
   if (!s) return;
   const level = el.dataset.level;
-  const steps = [...document.querySelectorAll(`#respCard input[data-level="${level}"]:checked`)].map(i => i.dataset.key);
-  document.querySelectorAll(`#respCard input[data-level="${level}"]`).forEach(i => { i.disabled = true; });
-  sendJSON(API + `/api/sensors/${s.device_id}/response`, {level, steps}, 'PUT').then(view => {
-    replaceSensor(view);
-    showToast('Saved');
-    renderResponse(view);
-    drawSensChart();
+  const boxes = [...document.querySelectorAll(`#respCard input[data-level="${level}"]`)];
+  const steps = boxes.filter(i => i.checked).map(i => i.dataset.key);
+  const before = boxes.filter(i => i === el ? !i.checked : i.checked).map(i => i.dataset.key);
+  // The step's own words are quoted: "Turned off: “Turn on Exhaust fan” (warning level)."
+  const step = `“${el.closest('.resp-item').textContent.trim()}”`, when = respWhen(s, level);
+  boxes.forEach(i => { i.disabled = true; });
+  putResponse(s.device_id, level, steps).then(() => {
+    if (el.checked) showToast(`Turned on: ${step} (${when}).`);
+    else showToast(`Turned off: ${step} (${when}).`, 'info', 10000, {label: 'Undo', run: () =>
+      putResponse(s.device_id, level, before).then(() => showToast(`${step} is back on (${when}).`))
+        .catch(err => toastError("Couldn't undo it.", err))});
   }).catch(err => { toastError("Couldn't save that.", err); renderResponse(s); });
+}
+// Which part of a sensor's response a step belongs to, as the toast says it: "danger level".
+function respWhen(s, level) {
+  return {warning: 'warning level', danger: 'danger level'}[level]
+    || (SENS_ACTIVE_TITLE[s.kind] || 'when it triggers').replace(/^W/, 'w');
+}
+function putResponse(id, level, steps) {
+  return sendJSON(API + `/api/sensors/${id}/response`, {level, steps}, 'PUT').then(view => {
+    replaceSensor(view);
+    const cur = selectedSensor();
+    if (cur && cur.device_id === view.device_id) { renderResponse(view); drawSensChart(); }
+    return view;
+  });
 }
 
 function renderSensGrid(list, sel) {
@@ -9471,14 +9588,16 @@ function renderSensIncidents() {
     const named = sensor && ((_sens && _sens.sensors) || []).find(x => x.device_id === inc.device_id);
     const source = !sensor ? inc.camera_name : currentUser.role === 'admin' ? inc.source : named ? named.name : 'Sensor';
     const reading = sensor ? inc.reading : camera ? Math.round((inc.peak_confidence || 0) * 100) + ' % confidence' : '—';
-    const open = inc.status === 'open';
-    const pill = open ? `<span class="dev-pill ${inc.severity === 'critical' ? 'alert' : 'warn'}">OPEN</span>`
-      : inc.status === 'false_alarm' ? '<span class="dev-pill muted">FALSE ALARM</span>' : '<span class="dev-pill">RESOLVED</span>';
+    const open = inc.status === 'open', stale = isStale(inc), crit = inc.severity === 'critical';
+    // The same words and tones as Live: an old open one is quiet, a closed one "Acknowledged".
+    const pill = open ? (stale ? '<span class="dev-pill muted">STILL OPEN</span>' : `<span class="dev-pill ${crit ? 'alert' : 'warn'}">OPEN</span>`)
+      : inc.status === 'false_alarm' ? '<span class="dev-pill muted">FALSE ALARM</span>' : '<span class="dev-pill">ACKNOWLEDGED</span>';
+    const tone = open && !stale ? (crit ? ' hot' : ' warm') : '';
     const iid = parseInt(inc.incident_id) || 0;
     return `<tr onclick="openIncident(${iid})">` +
       `<td class="mono">${fmtWhen(inc.started_ts)}</td><td>${escapeHtml(inc.camera_name || '—')}</td>` +
       `<td class="inc-what"><button class="row-open" type="button" data-key="inc-${iid}" aria-haspopup="dialog">${escapeHtml(incidentTitle(inc))}</button><small class="inc-where">${escapeHtml(inc.camera_name || '')}</small></td><td><span class="src-tag">${tag}</span>${escapeHtml(source || '—')}</td>` +
-      `<td class="reading">${escapeHtml(reading || '—')}</td><td>${pill}</td></tr>`;
+      `<td class="reading${tone}">${escapeHtml(reading || '—')}</td><td>${pill}</td></tr>`;
   }).join(''));
 }
 

@@ -447,14 +447,16 @@ Each person gets a card with their photo (head and shoulders), name and category
 
 ### Watch the live feed
 **Live feeds** is the main dashboard:
-- A one-line verdict at the top says **All clear** or how many incidents need attention (it says **Not monitoring** when the system is stopped, rather than claiming all is well).
+- A one-line verdict at the top says **All clear**, or names the most urgent open incident and where it is, such as **Gas level high · Kitchen**, with when it started and how many more are open below it, and a **What to do** button that opens it (it says **Not monitoring** when the system is stopped, rather than claiming all is well).
 - Each camera shows the annotated MJPEG stream with bounding boxes, pose skeletons, and face labels overlaid.
 - The incident board lists open incidents first, then the ones recently handled, and updates in real time via Server-Sent Events.
 
 ### Handle incidents
 Click (or tap) an incident to open it: a video of the incident (or, while it is still being recorded, the most confident snapshot), how long it lasted, how many detections it grouped, and a timeline of the first, peak, escalating and last detections. **Download clip** saves the video, e.g. to send it to a relative.
 - **View live** jumps to that camera.
-- **Acknowledge** — you've seen it and dealt with it. **False alarm** — the detector was wrong. Either can carry a short note, and either can be changed later.
+- **Acknowledge** — you've seen it and dealt with it. **False alarm** — the detector was wrong. Either can carry a short note, and either can be changed later. While an incident is still happening, Acknowledge is no longer the main button: once it's acknowledged, more of the same won't alert again unless it gets worse.
+- An open incident with nothing new for 12 hours moves under **Still open from earlier**. Old ones alone no longer keep the house amber: the verdict reads calm on Live (**No new incidents**, or the monitoring state) and notes how many are still open. **Acknowledge all** on that divider closes them in one go, with **Undo** for two minutes.
+- When nothing at all happened in the last 7 days, **Incidents** says so in one line instead of showing a row of zeros.
 - If a closed incident gets worse (a fall turns into "lying motionless"), it reopens marked **Escalated**.
 - **Incidents** shows every incident with status, type and camera filters, the 7-day false-alarm counts, and a **Detection log** view of the individual detections. **Clear history** (admins only) deletes incidents, their clips and the log.
 
@@ -463,7 +465,7 @@ Click (or tap) an incident to open it: a video of the incident (or, while it is 
 Open **Sensors**. The big chart shows the selected sensor; click another sensor's card below to show it instead.
 
 - **Thresholds** (admins): the warning and danger levels, how often the board reads it, and how long it must stay above a level. For the MQ-2 also how its output is wired (see [firmware/HomeShieldNode/README.md](firmware/HomeShieldNode/README.md#wiring-the-sensors)) and **Calibrate**.
-- **Automatic response** (admins): tick what happens at each level. The devices offered are the ones in the sensor's room.
+- **Automatic response** (admins): tick what happens at each level. The devices offered are the ones in the sensor's room. Each tick saves at once and the message names it ("Turned off: “Close Gas valve” (danger level)."); turning a step off offers **Undo**.
 - When a sensor reaches a level, every dashboard shows a banner. **Acknowledge** it once someone is dealing with it: the buzzer stops and its incident is closed with your name. The banner comes back if it gets worse.
 - Switch the top bar's **Home** to **Away** when everyone leaves; motion sensors then raise the alarm. Anyone signed in can switch it.
 - Readings are kept per minute for 30 days.
